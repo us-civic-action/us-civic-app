@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-mono: var(--font-geist-mono);
+
+  /* Map attributes to CSS variables for dynamic switching */
+  --color-nh-green-50: var(--color-nh-green-50);
+  --color-nh-green-100: var(--color-nh-green-100);
+  --color-nh-green-500: var(--color-nh-green-500);
+  --color-nh-green-700: var(--color-nh-green-700);
+  --color-nh-green-900: var(--color-nh-green-900);
+
+  --color-granite-50: var(--color-granite-50);
+  --color-granite-100: var(--color-granite-100);
+  --color-granite-200: var(--color-granite-200);
+  --color-granite-300: var(--color-granite-300);
+  --color-granite-400: var(--color-granite-400);
+  --color-granite-500: var(--color-granite-500);
+  --color-granite-600: var(--color-granite-600);
+  --color-granite-700: var(--color-granite-700);
+  --color-granite-800: var(--color-granite-800);
+  --color-granite-900: var(--color-granite-900);
+
+  --color-freedom-blue-500: var(--color-freedom-blue-500);
+  --color-freedom-blue-700: var(--color-freedom-blue-700);
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #111827; /* granite-900 */
+
+  /* UI Colors */
+  --card: #ffffff;
+  --card-border: #e5e7eb; /* granite-200 */
+  --muted: #f9fafb; /* granite-50 */
+  --muted-foreground: #6b7280; /* granite-500 */
+
+  /* NH Green Palette */
+  --color-nh-green-50: #f0fdf4;
+  --color-nh-green-100: #dcfce7;
+  --color-nh-green-500: #22c55e;
+  --color-nh-green-700: #15803d;
+  --color-nh-green-900: #14532d;
+
+  /* Granite Palette (Light Mode) */
+  --color-granite-50: #f9fafb;
+  --color-granite-100: #f3f4f6;
+  --color-granite-200: #e5e7eb;
+  --color-granite-300: #d1d5db;
+  --color-granite-400: #9ca3af;
+  --color-granite-500: #6b7280;
+  --color-granite-600: #4b5563;
+  --color-granite-700: #374151;
+  --color-granite-800: #1f2937;
+  --color-granite-900: #111827;
+
+  /* Freedom Blue */
+  --color-freedom-blue-500: #2563eb;
+  --color-freedom-blue-700: #1d4ed8;
+}
+
+.dark {
+  --background: #0f172a; /* Slate 900 */
+  --foreground: #f3f4f6; /* granite-100 */
+
+  /* Dark UI Colors */
+  --card: #1e293b; /* Slate 800 */
+  --card-border: #334155; /* Slate 700 */
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8; /* Slate 400 */
+
+  /* Remap Granite for Dark Mode stability (Inverted Scale) */
+  --color-granite-50: #1e293b;  /* Dark Backgrounds */
+  --color-granite-100: #334155; /* Lighter Dark Backgrounds */
+  --color-granite-200: #475569; /* Borders */
+  --color-granite-300: #64748b;
+  --color-granite-400: #94a3b8;
+  --color-granite-500: #cbd5e1;
+  --color-granite-600: #e2e8f0;
+  --color-granite-700: #f1f5f9;
+  --color-granite-800: #f8fafc;
+  --color-granite-900: #ffffff; /* Text becomes white */
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Accessibility Utilities */
+.text-large {
+  font-size: 110%;
+}
+
+.text-xl {
+  font-size: 125%;
+}
+
+.font-dyslexic body,
+.font-dyslexic *,
+.font-dyslexic h1,
+.font-dyslexic h2,
+.font-dyslexic h3,
+.font-dyslexic p {
+  font-family: 'Verdana', 'Arial', sans-serif !important;
+  line-height: 1.6;
+  letter-spacing: 0.05em;
+  word-spacing: 0.1em;
+}
+
+.motion-reduce-forced *,
+.motion-reduce-forced *::before,
+.motion-reduce-forced *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
