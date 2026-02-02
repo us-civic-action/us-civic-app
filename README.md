@@ -77,14 +77,14 @@ Our goal is to provide a neutral, non-partisan infrastructure that empowers citi
 
 5. Open [http://localhost:3000](http://localhost:3000) with your browser.
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to get started.
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🛡️ Privacy & Transparency
+## Privacy & Transparency
 
 This project is open source to ensure trust. We do not track users, sell data, or accept PAC money. See our in-app Transparency page for more details.
