@@ -8,13 +8,21 @@ import { notFound } from 'next/navigation';
 import { getLegislatorContact } from '@/lib/legislator-contact';
 import { getStateConfig } from '@/lib/states';
 
+
+interface SponsoredBill {
+    bill_number: string;
+    title: string;
+    description: string;
+    url: string;
+}
+
 export default async function LegislatorProfile(props: { params: Promise<{ state: string, id: string }> }) {
     const params = await props.params;
     const config = getStateConfig(params.state);
 
     // 1. Try Mock Database (Static/Demo Data)
     let legislator: Partial<Legislator> | undefined = Object.values(MOCK_LEGISLATORS).find(l => l.id === params.id);
-    let sponsoredBills: any[] = [];
+    let sponsoredBills: SponsoredBill[] = [];
     let isLive = false;
 
     // 2. Try Live API (LegiScan) if ID is numeric
@@ -42,7 +50,7 @@ export default async function LegislatorProfile(props: { params: Promise<{ state
                     committees: p.committees || [] // Map committees
                 } as Partial<Legislator>;
             }),
-            legiscan.getSponsoredList(params.id, sessionId || undefined, params.state).then(res => res || [])
+            legiscan.getSponsoredList(params.id, sessionId?.id || undefined, params.state).then(res => res || [])
         ]);
 
         if (legislator) {

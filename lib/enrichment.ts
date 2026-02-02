@@ -13,7 +13,7 @@ export const enrichment = {
     // ... (keep calculateStalledStatus as is) ...
 
     // MANUAL DATA OVERRIDES (Due to API Limitations)
-    getCommitteeAssignments: (id: string | number): string[] => {
+    getCommitteeAssignments: (id: string | number, state: string = 'NH', party: string = 'I'): string[] => {
         // 1. Try to find the person's name using our mock data (or passed in props in future)
         // Since we only have ID here, we need to find the name from MOCK_LEGISLATORS if possible,
         // or rely on the fact that this function might need the Name to be passed in.
@@ -24,14 +24,14 @@ export const enrichment = {
 
         if (legislator) {
             // Try Exact Match in Committee JSON
-            if ((committeeData as any)[legislator.name]) {
-                return (committeeData as any)[legislator.name];
+            if ((committeeData as Record<string, string[]>)[legislator.name]) {
+                return (committeeData as Record<string, string[]>)[legislator.name];
             }
 
             // Try Normalized key match (e.g. JSON has "John Smith" but we have "Rep. John Smith")
             const cleanName = legislator.name.replace(/^(Rep\.|Sen\.|Representative|Senator)\s+/i, '').trim();
-            if ((committeeData as any)[cleanName]) {
-                return (committeeData as any)[cleanName];
+            if ((committeeData as Record<string, string[]>)[cleanName]) {
+                return (committeeData as Record<string, string[]>)[cleanName];
             }
         }
 
@@ -43,13 +43,29 @@ export const enrichment = {
         // If not, we keep this as a safe backup for the demo.
         if (sid === '25622') {
             // Check if scraper found him under "David Walker"
-            if ((committeeData as any)["David Walker"]) return (committeeData as any)["David Walker"];
+            if ((committeeData as Record<string, string[]>)["David Walker"]) return (committeeData as Record<string, string[]>)["David Walker"];
 
             // If not, return inferred.
             return ['House Transportation Committee', 'House Rules Committee'];
         }
 
-        return [];
+        // Generic State-Based Defaults (if API is empty)
+        if (state.toUpperCase() === 'HI') {
+            return [
+                'Finance',
+                'Health & Homelessness',
+                'Labor & Government Operations'
+            ];
+        }
+
+        if (state.toUpperCase() === 'NH') {
+            return party === 'R'
+                ? ['Public Works & Highways', 'Ways & Means']
+                : ['Health, Human Services & Elderly Affairs', 'Education'];
+        }
+
+        // Catch-all
+        return ['Judiciary', 'Appropriations', 'Rules'];
     },
     getPersonDetails: (name: string): Partial<Legislator> => {
         // Normalize: remove titles and extra whitespace
@@ -164,33 +180,12 @@ export const enrichment = {
         return diffDays > 30;
     },
 
-    // MANUAL DATA OVERRIDES (Due to API Limitations)
-    getCommitteeAssignments: (id: string | number, state: string = 'NH', party: string = 'I'): string[] => {
-        const sid = String(id);
 
-        // David Walker (25622) - Keep manual override
-        if (sid === '25622') {
-            return ['House Transportation Committee', 'House Rules Committee'];
-        }
+    // MANUAL DATA OVERRIDES (Due to API Limitations) - Continued in logic above
+    // getCommitteeAssignments override is handled in the main function.
+    // Removing duplicate definition.
 
-        // Generic State-Based Defaults (if API is empty)
-        if (state.toUpperCase() === 'HI') {
-            return [
-                'Finance',
-                'Health & Homelessness',
-                'Labor & Government Operations'
-            ];
-        }
 
-        if (state.toUpperCase() === 'NH') {
-            return party === 'R'
-                ? ['Public Works & Highways', 'Ways & Means']
-                : ['Health, Human Services & Elderly Affairs', 'Education'];
-        }
-
-        // Catch-all
-        return ['Judiciary', 'Appropriations', 'Rules'];
-    },
 
     getDonors: (id: string | number, state: string = 'NH', party: string = 'I'): MajorDonor[] => {
         const sid = String(id);
