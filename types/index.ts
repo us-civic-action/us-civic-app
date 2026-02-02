@@ -4,6 +4,13 @@ export interface MajorDonor {
     category: 'PAC' | 'Industry' | 'Individual' | 'Union' | 'Self' | 'Party' | 'Advocacy' | 'Corporate' | 'Small Donors' | 'Other';
 }
 
+export interface Sponsor {
+    people_id: number;
+    name: string;
+    party: string;
+    role: string;
+}
+
 export interface Bill {
     bill_id: number;
     number: string;
@@ -15,6 +22,7 @@ export interface Bill {
     last_action: string;
     title: string;
     description: string;
+    sponsors?: Sponsor[];
 }
 
 export interface Hearing {

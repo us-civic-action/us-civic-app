@@ -27,6 +27,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         const storedDyslexia = localStorage.getItem("a11y-dyslexia") === "true";
         const storedMotion = localStorage.getItem("a11y-motion") === "true";
 
+        // eslint-disable-next-line
         if (storedSize) setFontSize(storedSize);
         if (storedDyslexia) setDyslexiaFont(storedDyslexia);
         if (storedMotion) setReduceMotion(storedMotion);

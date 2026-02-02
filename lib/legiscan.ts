@@ -1,7 +1,6 @@
 import { Bill, Hearing, AmendedBill, Pill } from '@/types';
 import { enrichment } from './enrichment';
 
-const API_KEY = process.env.LEGISCAN_API_KEY;
 const BASE_URL = 'https://api.legiscan.com/';
 
 // Mock Data for MVP
@@ -70,7 +69,7 @@ import { cachedData } from './cache-utils';
 
 // Helper to normalize LegiScan's weird "Object with numeric keys" arrays
 // e.g. { "0": {...}, "1": {...} } -> [{...}, {...}]
-const normalizeArray = (info: Record<string, unknown> | unknown[] | null | undefined): any[] => {
+const normalizeArray = (info: Record<string, unknown> | unknown[] | null | undefined): unknown[] => {
     if (!info) return [];
     if (Array.isArray(info)) return info;
     // Filter out non-numeric keys like "summary" or "mime_type" which sometimes appear mixed in
@@ -96,7 +95,7 @@ export const getActiveSessionId = async (state: string): Promise<{ id: number, y
         const currentYear = new Date().getFullYear();
 
         // Filter for sessions in current or last year
-        let relevantSessions = data.sessions.filter((s: { year_start: number }) =>
+        const relevantSessions = data.sessions.filter((s: { year_start: number }) =>
             s.year_start >= currentYear - 1
         );
 
@@ -167,9 +166,9 @@ export const legiscan = {
 
                     // 2. Sort bills by most recently active
                     // REDUCED LIMIT: Only scan top 40 actively moving bills to save API calls (The "Miser" Strategy)
-                    const bills = Object.values(masterData.masterlist || {})
-                        .sort((a: any, b: any) => new Date(b.last_action_date).getTime() - new Date(a.last_action_date).getTime())
-                        .slice(0, 40) as { bill_id: number; last_action_date: string }[];
+                    const bills = (Object.values(masterData.masterlist || {}) as { bill_id: number; last_action_date: string }[])
+                        .sort((a, b) => new Date(b.last_action_date).getTime() - new Date(a.last_action_date).getTime())
+                        .slice(0, 40);
 
                     if (process.env.DEBUG) console.log(`🔍 Scanning top ${bills.length} bills for hearings & amendments...`);
 
@@ -217,7 +216,7 @@ export const legiscan = {
 
                             // A) Check for Hearings
                             if (bill.calendar && bill.calendar.length > 0) {
-                                bill.calendar.forEach((event: any) => {
+                                bill.calendar.forEach((event: { date: string, time: string, event_id: number, location: string, description: string }) => {
                                     const hearingDate = parseDate(event.date);
                                     // Relax filter for historical sessions
                                     if (hearingDate >= today || isHistorical) {
@@ -228,7 +227,7 @@ export const legiscan = {
                                             const ampm = hour >= 12 ? 'PM' : 'AM';
                                             const hour12 = hour % 12 || 12;
                                             formattedTime = `${hour12}:${m} ${ampm}`;
-                                        } catch (e) { }
+                                        } catch (_e) { }
 
                                         realHearings.push({
                                             hearing_id: event.event_id || Math.random(),
@@ -259,7 +258,7 @@ export const legiscan = {
 
                             // B) Check for Recent Amendments
                             if (bill.history && Array.isArray(bill.history)) {
-                                const recentAmendmentEvent = bill.history.find((event: any) => {
+                                const recentAmendmentEvent = bill.history.find((event: { date: string, action: string }) => {
                                     const evtDate = parseDate(event.date);
                                     const isRecent = (today.getTime() - evtDate.getTime()) / (1000 * 3600 * 24) < 90;
                                     const actionLower = event.action.toLowerCase();
@@ -313,7 +312,7 @@ export const legiscan = {
                     if (realHearings.length === 0 && recentAmendments.length === 0) {
                         console.log(`State ${state}: No hearings or amendments found. Activating 'Recent Activity' fallback.`);
 
-                        const recentActivity = await Promise.all(bills.slice(0, 5).map(async (billMeta: any) => {
+                        const recentActivity = await Promise.all(bills.slice(0, 5).map(async (billMeta: { bill_id: number }) => {
                             if (!billMeta.bill_id) return null;
                             try {
                                 const detailRes = await fetch(`${BASE_URL}?key=${API_KEY}&op=getBill&id=${billMeta.bill_id}`);
@@ -350,7 +349,7 @@ export const legiscan = {
                                         { label: 'Recent Update', category: 'urgency', icon: '⚡', description: 'Recently active' }
                                     ] as Pill[]
                                 };
-                            } catch (e) { return null; }
+                            } catch (_e) { return null; }
                         }));
 
                         const validFallback = recentActivity.filter(Boolean) as AmendedBill[];
@@ -384,7 +383,7 @@ export const legiscan = {
                 const res = await fetch(`${BASE_URL}?key=${API_KEY}&op=getBill&id=${billId}`);
                 const data = await res.json();
                 return data.bill as Bill;
-            } catch (e) {
+            } catch (_e) {
                 return null;
             }
         }, [`bill-details-${billId}`], 86400); // Cache individual bills for 24 hours
@@ -398,13 +397,13 @@ export const legiscan = {
                 const res = await fetch(`${BASE_URL}?key=${API_KEY}&op=getRollCall&id=${rollCallId}`);
                 const data = await res.json();
                 return data.roll_call;
-            } catch (e) {
+            } catch (_e) {
                 return null;
             }
         }, [`roll-call-${rollCallId}`], 86400 * 7); // Cache roll calls heavily
     },
 
-    getPerson: async (peopleId: string): Promise<any | null> => {
+    getPerson: async (peopleId: string): Promise<Record<string, unknown> | null> => {
         return cachedData(async () => {
             const API_KEY = process.env.LEGISCAN_API_KEY;
             if (!API_KEY) return null;
@@ -417,21 +416,21 @@ export const legiscan = {
                 // Enrich with committees if available
                 if (data.person && data.person.committee_list) {
                     const committees = normalizeArray(data.person.committee_list);
-                    data.person.committees = committees.map((c: { name: string }) => c.name);
+                    data.person.committees = committees.map((c) => (c as { name: string }).name);
                     console.log(`   ├─ Committees: ${committees.length} found`);
                 } else {
                     console.log(`   ├─ Committees: NONE (raw value: ${typeof data.person?.committee_list})`);
                 }
 
                 return data.person;
-            } catch (e) {
+            } catch (_e) {
                 return null;
             }
         }, [`person-v2-${peopleId}`], 86400 * 30); // Cache person details for 30 days (rarely changes)
     },
 
     // Generic Search
-    searchBills: async (state: string, query: string): Promise<any[]> => {
+    searchBills: async (state: string, query: string): Promise<unknown[]> => {
         return cachedData(async () => {
             const API_KEY = process.env.LEGISCAN_API_KEY;
             if (!API_KEY) return [];
@@ -441,13 +440,13 @@ export const legiscan = {
                 if (data.status === 'ERROR' || !data.searchresult) return [];
 
                 return normalizeArray(data.searchresult);
-            } catch (e) {
+            } catch (_e) {
                 return [];
             }
         }, [`search-${state}-${query}`], 3600); // Cache search for 1 hour
     },
 
-    getSponsoredList: async (peopleId: string, sessionId?: number, stateCode: string = 'NH'): Promise<any[] | null> => {
+    getSponsoredList: async (peopleId: string, sessionId?: number, stateCode: string = 'NH'): Promise<Record<string, unknown>[] | null> => {
         return cachedData(async () => {
             const API_KEY = process.env.LEGISCAN_API_KEY;
             if (!API_KEY) return null;
@@ -462,9 +461,9 @@ export const legiscan = {
                 const res = await fetch(url);
                 const data = await res.json();
 
-                let bills = [];
+                let bills: Record<string, unknown>[] = [];
                 if (data.sponsoredbills) {
-                    bills = normalizeArray(data.sponsoredbills);
+                    bills = normalizeArray(data.sponsoredbills) as Record<string, unknown>[];
                 }
 
                 // 2. FALLBACK: If list is empty, try Name Search (Fix for broken API links)
@@ -474,7 +473,7 @@ export const legiscan = {
                     // A) Get Person Name
                     const person = await legiscan.getPerson(peopleId);
                     if (person && person.name) {
-                        const nameQuery = person.name; // e.g. "David Walker"
+                        const nameQuery = String(person.name); // e.g. "David Walker"
                         console.log(`   🔎 Searching for bills matching: "${nameQuery}" in ${stateCode}`);
 
                         // B) Search Bills using properly passed state code
@@ -487,9 +486,10 @@ export const legiscan = {
                         console.log(`   🔎 Found ${potentialBills.length} potential matches. Verifying...`);
 
                         const verifiedBills = [];
-                        for (const b of potentialBills) {
+                        for (const pb of potentialBills) {
+                            const b = pb as { bill_id: number; bill_number: string; title: string; last_action: string; last_action_date: string; text_url?: string; url?: string };
                             if (!b.bill_id) continue;
-                            const details = await legiscan.getBillDetails(b.bill_id) as any;
+                            const details = await legiscan.getBillDetails(b.bill_id);
                             if (details && details.sponsors) {
                                 // Check if OUR guy is in the sponsor list
                                 const isSponsor = details.sponsors.some((s: { people_id: unknown }) => String(s.people_id) === String(peopleId));
@@ -515,7 +515,7 @@ export const legiscan = {
                 console.log(`   ├─ Bills: ${bills.length} found`);
 
                 // Sort by Bill ID Descending (Proxy for newest)
-                return bills.sort((a: { bill_id: number }, b: { bill_id: number }) => {
+                return (bills as { bill_id: number }[]).sort((a, b) => {
                     return (b.bill_id - a.bill_id);
                 });
 

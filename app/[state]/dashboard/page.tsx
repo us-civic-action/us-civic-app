@@ -1,11 +1,12 @@
 import { legiscan } from '@/lib/legiscan';
 import { getStateConfig, isValidState } from '@/lib/states';
 import Dashboard from '@/components/Dashboard';
+import { notFound } from 'next/navigation';
 
 
 export default async function StateDashboard(props: { params: Promise<{ state: string }>, searchParams: Promise<{ session?: string }> }) {
   const params = await props.params;
-  const searchParams = await props.searchParams;
+  // const searchParams = await props.searchParams;
   const { state } = params;
   const stateCode = state.toUpperCase();
 
@@ -20,6 +21,10 @@ export default async function StateDashboard(props: { params: Promise<{ state: s
   }
 
   const config = getStateConfig(stateCode);
+
+  if (!config) {
+    return notFound();
+  }
 
   // Fetch Data
   const { hearings, amendments } = await legiscan.getDashboardData(stateCode);

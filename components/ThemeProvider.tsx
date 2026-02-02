@@ -28,13 +28,11 @@ export function ThemeProvider({
     storageKey = "civic-ui-theme",
 }: ThemeProviderProps) {
     const [theme, setTheme] = useState<Theme>(defaultTheme);
-    const [mounted, setMounted] = useState(false);
-
     // Load from storage AND handle system listener
     useEffect(() => {
-        setMounted(true);
         const saved = localStorage.getItem(storageKey) as Theme;
         if (saved) {
+            // eslint-disable-next-line
             setTheme(saved);
         }
     }, [storageKey]);

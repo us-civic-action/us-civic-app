@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import WizardForm from './WizardForm';
-import { getStateConfig, isValidState } from '@/lib/states';
+import { isValidState } from '@/lib/states';
 import { notFound } from 'next/navigation';
 
 export default async function WizardPage(props: { params: Promise<{ state: string }> }) {
@@ -11,7 +11,7 @@ export default async function WizardPage(props: { params: Promise<{ state: strin
         return notFound();
     }
 
-    const config = getStateConfig(stateCode);
+    // const config = getStateConfig(stateCode);
 
     // Dynamic Wizard enabled for all supported states now (with fallback instructions)
     // if (!config.hasWizard) { ... }

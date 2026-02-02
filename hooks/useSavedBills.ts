@@ -22,6 +22,7 @@ export function useSavedBills() {
                 // Safest for MVP is to check if the first item is a number.
                 if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'number') {
                     console.warn('Detected old schema (IDs only). Resetting storage to support State Metadata.');
+                    // eslint-disable-next-line
                     setSavedBills([]);
                     localStorage.removeItem(STORAGE_KEY);
                 } else {

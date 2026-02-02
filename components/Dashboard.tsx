@@ -6,7 +6,7 @@ import CalendarWidget from '@/components/CalendarWidget';
 import Link from 'next/link';
 import { isSameDay } from 'date-fns';
 import SmartPill from './SmartPill';
-import { useParams } from 'next/navigation';
+
 
 import { useSavedBills } from '@/hooks/useSavedBills';
 

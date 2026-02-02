@@ -1,6 +1,6 @@
 "use client";
 
-import { SUPPORTED_STATES } from '@/lib/states';
+import { SUPPORTED_STATES, StateConfig } from '@/lib/states';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import Image from "next/image";
@@ -18,6 +18,7 @@ export default function LandingPage() {
     useEffect(() => {
         const saved = localStorage.getItem('civic_favorites');
         if (saved) {
+            // eslint-disable-next-line
             setFavorites(JSON.parse(saved));
         }
         setMounted(true);
@@ -49,7 +50,7 @@ export default function LandingPage() {
         </button>
     );
 
-    const StateCard = ({ state }: { state: any }) => {
+    const StateCard = ({ state }: { state: StateConfig }) => {
         const isFav = favorites.includes(state.code);
         return (
             <Link

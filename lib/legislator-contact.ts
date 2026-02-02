@@ -35,6 +35,7 @@ export const getLegislatorContact = (state: string, name: string, roleInput: str
 
     // Source B: Static Registry (JSON File) - Secondary Redundancy
     // Now scoped by state to avoid collisions (e.g. REGISTRY['NH']['Smith'])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const stateRegistry = (REGISTRY as Record<string, any>)[stateCode];
     const registryData = stateRegistry ? stateRegistry[name] : undefined;
 
@@ -50,6 +51,7 @@ export const getLegislatorContact = (state: string, name: string, roleInput: str
         id: finalId,
         email: email,
         phone: phone,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         role: (roleInput || registryData?.role) as any,
         district: enriched.district || registryData?.district,
         party: enriched.party || registryData?.party
