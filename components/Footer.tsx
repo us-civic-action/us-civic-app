@@ -37,7 +37,7 @@ export default function Footer() {
                         &copy; {new Date().getFullYear()} US Civic Action. Not affiliated with any state or federal government.
                     </div>
                     <a
-                        href="https://github.com/[YOUR_USERNAME]/us-civic-app"
+                        href="https://github.com/us-civic-action/us-civic-app"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-granite-100 dark:bg-slate-800 border border-granite-200 dark:border-slate-700 text-xs font-bold text-granite-600 dark:text-slate-400 hover:bg-granite-200 dark:hover:bg-slate-700 transition-colors"
