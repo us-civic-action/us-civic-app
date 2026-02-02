@@ -8,7 +8,7 @@
 
 US Civic Action is a modern, open-source tool designed to lower the barrier to entry for civic engagement. It helps users track legislation, understand bill impacts, and generate professional testimony for public hearings.
 
-## 🚀 Mission
+## Mission
 
 Our goal is to provide a neutral, non-partisan infrastructure that empowers citizens to:
 
@@ -16,7 +16,7 @@ Our goal is to provide a neutral, non-partisan infrastructure that empowers citi
 2. **Understand** complex bills with AI-assisted summaries and "smart pills."
 3. **Act** by generating formatted testimony and finding the right contact information.
 
-## ✨ Features
+## Features
 
 - **Dashboard**: A centralized view of upcoming hearings and recent amendments.
 - **Smart Filtering**: Filter hearing calendars by date and urgency.
@@ -24,7 +24,7 @@ Our goal is to provide a neutral, non-partisan infrastructure that empowers citi
 - **Testimony Wizard**: A guided step-by-step tool to draft professional looking testimony.
 - **State Agnostic Core**: Designed to support multiple states (currently focused on NH/MA/NJ).
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
 - **Language**: TypeScript
