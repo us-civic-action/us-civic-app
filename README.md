@@ -44,7 +44,7 @@ Our goal is to provide a neutral, non-partisan infrastructure that empowers citi
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/[YOUR_USERNAME]/us-civic-app.git
+    git clone https://github.com/us-civic-action/us-civic-app.git
     cd us-civic-app
     ```
 

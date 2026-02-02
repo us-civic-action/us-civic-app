@@ -32,8 +32,8 @@ Please ensure your code follows the existing style and conventions.
 1. **Clone the repo**:
 
     ```bash
-    git clone [REPOSITORY_URL]
-    cd nh-civic-app
+    git clone https://github.com/us-civic-action/us-civic-app.git
+    cd us-civic-app
     ```
 
 2. **Install dependencies**:
