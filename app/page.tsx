@@ -54,14 +54,14 @@ export default function LandingPage() {
         return (
             <Link
                 href={`/${state.code.toLowerCase()}/dashboard`}
-                className={`relative bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border transition-all group ${isFav ? 'border-yellow-200 dark:border-yellow-900 shadow-md ring-1 ring-yellow-100 dark:ring-yellow-900/50' : 'border-granite-200 dark:border-slate-700 hover:shadow-md hover:border-nh-green-500 dark:hover:border-nh-green-500'
+                className={`relative bg-white dark:bg-slate-800 p-4 md:p-6 rounded-xl shadow-sm border transition-all group flex flex-col items-center text-center ${isFav ? 'border-yellow-200 dark:border-yellow-900 shadow-md ring-1 ring-yellow-100 dark:ring-yellow-900/50' : 'border-granite-200 dark:border-slate-700 hover:shadow-md hover:border-nh-green-500 dark:hover:border-nh-green-500'
                     }`}
             >
                 <FavoriteStar code={state.code} isFav={isFav} />
                 <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">
                     {state.flagEmoji}
                 </div>
-                <h2 className="text-lg font-bold text-granite-900 dark:text-slate-100">
+                <h2 className="text-sm md:text-lg font-bold text-granite-900 dark:text-slate-100 break-words w-full leading-tight">
                     {state.name}
                 </h2>
                 <p className="text-xs text-granite-500 dark:text-slate-400 font-bold mt-1 uppercase tracking-wide">

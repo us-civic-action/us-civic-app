@@ -48,15 +48,15 @@ export default function TransparencyPage() {
                         <ul className="space-y-3 text-granite-900 dark:text-slate-300 font-medium">
                             <li className="flex gap-3">
                                 <span className="text-green-600 dark:text-green-400 font-bold">✓</span>
-                                <span>I do <strong>not</strong> sell your data to anyone.</span>
+                                <span className="text-stone-900 dark:text-stone-300">I do <strong>not</strong> sell your data to anyone.</span>
                             </li>
                             <li className="flex gap-3">
                                 <span className="text-green-600 dark:text-green-400 font-bold">✓</span>
-                                <span>I do <strong>not</strong> share donor lists with political parties.</span>
+                                <span className="text-stone-900 dark:text-stone-300">I do <strong>not</strong> share donor lists with political parties.</span>
                             </li>
                             <li className="flex gap-3">
                                 <span className="text-green-600 dark:text-green-400 font-bold">✓</span>
-                                <span>Your testimony is generated locally in your browser.</span>
+                                <span className="text-stone-900 dark:text-stone-300">Your testimony is generated locally in your browser.</span>
                             </li>
                         </ul>
                     </section>

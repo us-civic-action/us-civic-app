@@ -1,7 +1,7 @@
 export interface MajorDonor {
     name: string;
     amount?: number;
-    category: 'PAC' | 'Industry' | 'Individual' | 'Other';
+    category: 'PAC' | 'Industry' | 'Individual' | 'Union' | 'Self' | 'Party' | 'Advocacy' | 'Corporate' | 'Small Donors' | 'Other';
 }
 
 export interface Bill {
@@ -32,7 +32,7 @@ export interface Hearing {
     sponsor_info?: {
         name: string;
         id?: string; // Link to profile
-        party: 'R' | 'D' | 'I';
+        party: 'R' | 'D' | 'I' | 'N/A';
         next_election: string;
         major_donors?: MajorDonor[];
     };
@@ -58,7 +58,7 @@ export interface AmendedBill {
     sponsor_info?: {
         name: string;
         id?: string;
-        party: 'R' | 'D' | 'I';
+        party: 'R' | 'D' | 'I' | 'N/A';
         next_election: string;
         major_donors?: MajorDonor[];
     };
@@ -81,9 +81,9 @@ export interface TestimonyPacket {
 export interface Legislator {
     id: string; // "rep-joe-smith" or unique ID
     name: string;
-    role: 'Representative' | 'Senator';
+    role: 'Representative' | 'Senator' | 'Committee';
     district: string;
-    party: 'R' | 'D' | 'I';
+    party: 'R' | 'D' | 'I' | 'N/A';
     email?: string;
     phone?: string;
     photoUrl?: string;

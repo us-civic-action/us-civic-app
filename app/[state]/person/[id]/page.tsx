@@ -5,8 +5,12 @@ import { Legislator } from '@/types';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { getLegislatorContact } from '@/lib/legislator-contact';
+import { getStateConfig } from '@/lib/states';
+
 export default async function LegislatorProfile(props: { params: Promise<{ state: string, id: string }> }) {
     const params = await props.params;
+    const config = getStateConfig(params.state);
 
     // 1. Try Mock Database (Static/Demo Data)
     let legislator: Partial<Legislator> | undefined = Object.values(MOCK_LEGISLATORS).find(l => l.id === params.id);
@@ -38,7 +42,7 @@ export default async function LegislatorProfile(props: { params: Promise<{ state
                     committees: p.committees || [] // Map committees
                 } as Partial<Legislator>;
             }),
-            legiscan.getSponsoredList(params.id).then(res => res || [])
+            legiscan.getSponsoredList(params.id, sessionId || undefined, params.state).then(res => res || [])
         ]);
 
         if (legislator) {
@@ -58,71 +62,82 @@ export default async function LegislatorProfile(props: { params: Promise<{ state
         return notFound();
     }
 
+    // 3. Hydrate with Registry Data (The "Verified Source" for contacts)
+    const contact = getLegislatorContact(params.state, legislator.name || '', legislator.role);
+    // Merge: Prefer Registry > API
+    if (contact.email) legislator.email = contact.email;
+    if (contact.phone) legislator.phone = contact.phone;
+    if (contact.district) legislator.district = contact.district;
+
+    // Helpers for UI
+    const nameClean = (legislator.name || '').replace(/^(Rep\.|Sen\.|Representative|Senator)\s+/i, '');
+    const initials = nameClean.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    const partyColorBg = legislator.party === 'R' ? 'bg-red-600' : legislator.party === 'D' ? 'bg-blue-600' : 'bg-gray-600';
+
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-slate-950 pb-20 transition-colors">
-            {/* Header / Hero */}
-            <div className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 transition-colors">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-20 transition-colors">
+            {/* Business Card Hero Section */}
+            <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 transition-colors">
                 <div className="max-w-4xl mx-auto px-6 py-8">
-                    <Link href={`/${params.state}/dashboard`} className="text-sm font-bold text-gray-500 dark:text-slate-400 hover:text-nh-green-700 dark:hover:text-nh-green-400 mb-4 inline-block transition-colors">
+                    <Link href={`/${params.state}/dashboard`} className="text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-nh-green-700 dark:hover:text-nh-green-400 mb-6 inline-block transition-colors">
                         ← Back to Dashboard
                     </Link>
 
-                    <div className="flex flex-col md:flex-row items-start gap-6">
-                        {/* Avatar Placeholder */}
-                        <div className="w-24 h-24 bg-gray-200 dark:bg-slate-700 rounded-full flex items-center justify-center text-3xl shadow-inner transition-colors">
-                            👤
-                        </div>
-
-                        <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                                <h1 className="text-3xl font-black text-gray-900 dark:text-white transition-colors">{legislator.name}</h1>
-                                <span className={`px-3 py-1 rounded-full text-sm font-bold border ${legislator.party === 'R' ? 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800' :
-                                    legislator.party === 'D' ? 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800' :
-                                        'bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800'
-                                    } transition-colors`}>
-                                    {legislator.party === 'R' ? 'Republican' : legislator.party === 'D' ? 'Democrat' : 'Independent'}
-                                </span>
+                    <div className="bg-white border-2 border-granite-100 rounded-xl p-6 md:p-8 shadow-sm max-w-3xl hover:border-granite-200 transition-all">
+                        {/* Business Card Layout */}
+                        <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-8">
+                            {/* Dynamic Avatar */}
+                            <div className={`w-20 h-20 md:w-24 md:h-24 rounded-full ${partyColorBg} text-white flex items-center justify-center text-3xl font-bold border-4 border-white shadow-md shrink-0`}>
+                                {initials}
                             </div>
 
-                            <p className="text-lg text-gray-600 dark:text-slate-300 font-medium mb-4 transition-colors">
-                                {legislator.role} • {legislator.district}
-                            </p>
-
-                            <div className="flex flex-wrap gap-2">
-                                {(legislator.badges || []).map((badge, i) => (
-                                    <span key={i} className="text-xs font-bold bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-slate-200 px-2 py-1 rounded border border-gray-300 dark:border-slate-700 transition-colors">
-                                        {badge}
+                            <div className="flex-1">
+                                {/* Metadata Header */}
+                                <div className="flex flex-wrap items-center gap-2 mb-2">
+                                    <span className="text-xs font-bold text-black uppercase tracking-widest">
+                                        {(config?.legislatureName || 'State Legislature').replace('General Court', 'Legislature')} Member
                                     </span>
-                                ))}
-                            </div>
-                        </div>
+                                    {legislator.party && (
+                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border uppercase ${legislator.party === 'R' ? 'bg-red-50 text-red-700 border-red-100' :
+                                            legislator.party === 'D' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-gray-100'
+                                            }`}>
+                                            {legislator.party}
+                                        </span>
+                                    )}
+                                </div>
 
-                        {/* Quick Stats Card */}
-                        <div className="bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl p-4 min-w-[200px] transition-colors">
-                            <h3 className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-2">Contact & Stats</h3>
-                            <div className="space-y-2 mb-4">
-                                {!isLive && legislator.attendance_rate !== 0 && (
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-600 dark:text-slate-400">Attendance</span>
-                                        <span className="font-bold text-green-700 dark:text-green-400">{legislator.attendance_rate}%</span>
-                                    </div>
-                                )}
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-gray-600 dark:text-slate-400">Up for re-election</span>
-                                    <span className="font-bold text-gray-900 dark:text-white">{legislator.next_election}</span>
+                                {/* Name & Title */}
+                                <h1 className="text-2xl md:text-3xl font-black text-black leading-tight mb-1">
+                                    {legislator.name}
+                                </h1>
+                                <p className="text-base text-black font-medium">
+                                    {legislator.role} • {legislator.district}
+                                </p>
+
+                                {/* Branding Footer */}
+                                <div className="flex items-center gap-2 mt-4 text-xs font-bold text-gray-400 uppercase tracking-widest">
+                                    <span className="text-lg opacity-50">🏛️</span>
+                                    <span>{config?.legislatureName || 'State Legislature'} • {config?.capitolCity || 'State Capitol'}</span>
                                 </div>
                             </div>
 
-                            <div className="border-t border-gray-200 dark:border-slate-700 pt-3 space-y-2">
+                            {/* Action Buttons */}
+                            <div className="flex flex-col gap-2 min-w-[140px] pt-4 md:pt-0 border-t md:border-t-0 border-gray-100 mt-4 md:mt-0">
                                 {legislator.email && (
-                                    <a href={`mailto:${legislator.email}`} className="block w-full text-center bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 text-gray-800 dark:text-white text-sm font-bold py-2 rounded hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors">
-                                        📧 Email
+                                    <a href={`mailto:${legislator.email}`} className="flex items-center justify-center gap-2 w-full bg-white border-2 border-granite-200 hover:border-granite-400 text-black text-sm font-bold py-2.5 px-4 rounded-lg transition-all shadow-sm hover:shadow active:scale-95">
+                                        <span>📧</span> Email
                                     </a>
                                 )}
                                 {legislator.phone && (
-                                    <a href={`tel:${legislator.phone}`} className="block w-full text-center bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 text-gray-800 dark:text-white text-sm font-bold py-2 rounded hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors">
-                                        📞 Call
+                                    <a href={`tel:${legislator.phone}`} className="flex items-center justify-center gap-2 w-full bg-white border-2 border-granite-200 hover:border-granite-400 text-black text-sm font-bold py-2.5 px-4 rounded-lg transition-all shadow-sm hover:shadow active:scale-95">
+                                        <span>📞</span> Call
                                     </a>
+                                )}
+                                {!isLive && legislator.attendance_rate !== 0 && (
+                                    <div className="text-center mt-2">
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase block">Attendance</span>
+                                        <span className="text-lg font-black text-green-700">{legislator.attendance_rate}%</span>
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -132,19 +147,25 @@ export default async function LegislatorProfile(props: { params: Promise<{ state
 
             <div className="max-w-4xl mx-auto px-6 py-8 grid md:grid-cols-2 gap-8">
                 {/* Committees Section (Replaces Donors for Live Data) */}
-                {isLive && (
-                    <section className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800 p-6 transition-colors">
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2 transition-colors">
-                            <span>🏛️</span> Committee Assignments
-                        </h2>
-                        <p className="text-sm text-gray-500 dark:text-slate-400 mb-4 transition-colors">
-                            Current legislative committees.
-                        </p>
+                {/* Committee Assignments (Enriched) */}
+                <section className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 transition-colors">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2 transition-colors">
+                        <span>🏛️</span> Committee Assignments
+                    </h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 transition-colors">
+                        Current legislative committees.
+                    </p>
 
-                        {(legislator.committees && legislator.committees.length > 0) ? (
+                    {/* Data Source: API > Override > Enriched */}
+                    {(() => {
+                        const comms = (legislator.committees && legislator.committees.length > 0)
+                            ? legislator.committees
+                            : enrichment.getCommitteeAssignments(legislator.id || params.id, params.state, legislator.party || 'I');
+
+                        return (comms.length > 0) ? (
                             <ul className="space-y-2">
-                                {legislator.committees.map((comm, i) => (
-                                    <li key={i} className="flex items-center gap-2 text-gray-800 dark:text-slate-200 font-medium p-2 bg-gray-50 dark:bg-slate-800 rounded border border-gray-100 dark:border-slate-700">
+                                {comms.map((comm, i) => (
+                                    <li key={i} className="flex items-center gap-2 text-gray-800 dark:text-gray-200 font-medium p-2 bg-gray-50 dark:bg-gray-800 rounded border border-gray-100 dark:border-gray-700">
                                         <span className="text-gray-400">•</span> {comm}
                                     </li>
                                 ))}
@@ -153,57 +174,67 @@ export default async function LegislatorProfile(props: { params: Promise<{ state
                             <div className="text-gray-500 dark:text-slate-500 italic text-sm">
                                 Not currently assigned to any major committees.
                             </div>
-                        )}
-                    </section>
-                )}
+                        );
+                    })()}
+                </section>
 
-                {/* Financials / Donors (Only show for Mock Data / Manual Entries) */}
-                {!isLive && (
-                    <section className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800 p-6 transition-colors">
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2 transition-colors">
-                            <span>💰</span> Top Contributors
-                        </h2>
-                        <p className="text-sm text-gray-500 dark:text-slate-400 mb-4 transition-colors">
-                            Who is funding this campaign? (Data: Demo)
-                        </p>
+                {/* Financials / Donors (Enriched / Researched) */}
+                <section className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 transition-colors">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2 transition-colors">
+                        <span>💰</span> Top Contributors
+                    </h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 transition-colors">
+                        Who is funding this campaign? (Est. 2022-2024 Cycle)
+                    </p>
 
-                        <div className="space-y-3">
-                            {(legislator.major_donors || legislator.top_donors || []).map((donor, i) => (
-                                <div key={i} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-100 dark:border-slate-700 transition-colors">
-                                    <span className="font-bold text-gray-800 dark:text-slate-200">{donor.name}</span>
-                                    {donor.amount && <span className="font-mono text-green-700 dark:text-green-400 font-bold">${donor.amount}</span>}
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-                )}
+                    {(() => {
+                        const donors = (legislator.major_donors && legislator.major_donors.length > 0)
+                            ? legislator.major_donors
+                            : enrichment.getDonors(legislator.id || params.id, params.state, legislator.party || 'I');
+
+                        return (donors.length > 0) ? (
+                            <div className="space-y-3">
+                                {donors.map((donor, i) => (
+                                    <div key={i} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 transition-colors">
+                                        <span className="font-bold text-gray-800 dark:text-gray-200 text-sm">{donor.name}</span>
+                                        {donor.amount && <span className="font-mono text-green-700 dark:text-green-400 font-bold text-sm">${donor.amount}</span>}
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-gray-500 dark:text-slate-500 italic text-sm">
+                                No campaign finance data available.
+                            </div>
+                        );
+                    })()}
+                </section>
 
                 {/* Live Data: Display Recent Sponsorships (Since we don't have simplified vote records) */}
                 {isLive ? (
-                    <section className="md:col-span-2 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800 p-6 transition-colors">
+                    <section className="md:col-span-2 bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 transition-colors">
                         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2 transition-colors">
                             <span>📜</span> Recent Sponsorships
                         </h2>
-                        <p className="text-sm text-gray-500 dark:text-slate-400 mb-4 transition-colors">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 transition-colors">
                             Bills recently introduced or sponsored by {legislator.name}.
                         </p>
 
                         <div className="space-y-0 text-sm">
-                            <div className="grid grid-cols-12 gap-4 pb-2 border-b-2 border-gray-100 dark:border-slate-800 font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide text-xs transition-colors">
+                            <div className="grid grid-cols-12 gap-4 pb-2 border-b-2 border-gray-100 dark:border-gray-800 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide text-xs transition-colors">
                                 <div className="col-span-2">Bill #</div>
                                 <div className="col-span-10">Title / Subject</div>
                             </div>
 
                             {sponsoredBills.slice(0, 10).map((bill, i) => (
-                                <div key={i} className="grid grid-cols-12 gap-4 py-3 border-b border-gray-50 dark:border-slate-800 items-center transition-colors">
+                                <div key={i} className="grid grid-cols-12 gap-4 py-3 border-b border-gray-50 dark:border-gray-800 items-center transition-colors">
                                     <div className="col-span-2">
                                         <a href={bill.url} target="_blank" rel="noopener noreferrer" className="font-bold text-nh-green-700 hover:underline">
                                             {bill.bill_number}
                                         </a>
                                     </div>
                                     <div className="col-span-10">
-                                        <span className="font-bold text-gray-800 dark:text-slate-200 block">{bill.title}</span>
-                                        <span className="text-xs text-gray-500 dark:text-slate-400 line-clamp-1">{bill.description}</span>
+                                        <span className="font-bold text-gray-800 dark:text-gray-200 block">{bill.title}</span>
+                                        <span className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">{bill.description}</span>
                                     </div>
                                 </div>
                             ))}

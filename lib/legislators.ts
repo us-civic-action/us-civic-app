@@ -128,5 +128,20 @@ export const MOCK_LEGISLATORS: Record<string, Legislator> = {
                 outcome: "Passed"
             }
         ]
+    },
+    // Live Demo: David Walker
+    "David Walker": {
+        id: "24750",
+        name: "David Walker",
+        role: "Representative",
+        district: "Strafford 19",
+        party: "R",
+        email: "David.Walker@leg.state.nh.us",
+        phone: "603-271-3524",
+        next_election: "2026",
+        attendance_rate: 96,
+        badges: ["🇺🇸 Veteran", "🏛️ Local Control", "🔋 Energy Policy"],
+        major_donors: [],
+        votes: []
     }
 };

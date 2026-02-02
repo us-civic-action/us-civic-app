@@ -4,8 +4,6 @@ import { useState } from 'react';
 import { useSearchParams, useParams } from 'next/navigation';
 import jsPDF from 'jspdf';
 import { getStateConfig } from '@/lib/states';
-import { generateEmailLink } from '@/lib/mail-providers';
-import { getCommitteeContact } from '@/lib/committees';
 import { getLegislatorContact } from '@/lib/legislator-contact';
 
 export default function WizardForm() {
@@ -13,7 +11,7 @@ export default function WizardForm() {
     const params = useParams();
     const stateCode = typeof params?.state === 'string' ? params.state : 'nh';
     const config = getStateConfig(stateCode);
-    const isNH = config.code === 'NH';
+    // const isNH = config.code === 'NH'; // Unused
     // const isCommitteeBased = config.submissionMethod === 'committee'; // Used implicit check below
 
     const [step, setStep] = useState(1);
@@ -25,6 +23,7 @@ export default function WizardForm() {
         sponsor_name: searchParams.get('sponsor') || '',
         sponsor_party: searchParams.get('party') || '',
         sponsor_election: searchParams.get('election') || '',
+        sponsor_id: searchParams.get('id') || '',
         position: 'support', // support, oppose, neutral
         firstName: '',
         lastName: '',
@@ -34,6 +33,22 @@ export default function WizardForm() {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const [showCopyFeedback, setShowCopyFeedback] = useState(false);
+
+    const handleEmailAction = () => {
+        // 1. Copy testimony to clipboard
+        if (formData.testimony) {
+            navigator.clipboard.writeText(formData.testimony).then(() => {
+                setShowCopyFeedback(true);
+                setTimeout(() => setShowCopyFeedback(false), 3000);
+            });
+        }
+
+        // 2. Allow default behavior (opening mailto) but we intercept to show feedback first
+        // actually, we don't need to prevent default unless we want to delay.
+        // The mailto link will open.
     };
 
     const generatePDF = () => {
@@ -177,7 +192,7 @@ export default function WizardForm() {
 
                         <button
                             onClick={() => setStep(2)}
-                            className="w-full mt-6 bg-black text-white font-bold py-4 rounded-xl shadow-lg hover:bg-black transition-transform active:scale-[0.98]"
+                            className="w-full mt-6 bg-nh-green-700 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-nh-green-900 transition-transform active:scale-[0.98]"
                         >
                             Next: Write Testimony
                         </button>
@@ -221,7 +236,7 @@ export default function WizardForm() {
                                 value={formData.city}
                                 onChange={handleInputChange}
                                 placeholder="Concord"
-                                className="w-full px-4 py-3 rounded-lg border border-granite-300 bg-white text-granite-900 font-medium focus:ring-2 focus:ring-nh-green-500 outline-none"
+                                className="w-full px-4 py-3 rounded-lg border border-granite-300 bg-white text-granite-900 placeholder-granite-400 font-medium focus:ring-2 focus:ring-nh-green-500 outline-none"
                             />
                         </div>
 
@@ -243,13 +258,13 @@ export default function WizardForm() {
                         <div className="flex gap-4 pt-4">
                             <button
                                 onClick={() => setStep(1)}
-                                className="flex-1 py-4 text-gray-700 font-bold hover:text-black"
+                                className="flex-1 py-4 text-gray-700 font-bold hover:text-black border-2 border-granite-300 rounded-xl hover:border-granite-400 transition-all active:scale-95"
                             >
                                 Back
                             </button>
                             <button
                                 onClick={() => setStep(3)}
-                                className="flex-[2] bg-black text-white font-bold py-4 rounded-xl shadow-lg hover:bg-black transition-transform active:scale-[0.98]"
+                                className="flex-[2] bg-nh-green-700 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-nh-green-900 transition-transform active:scale-[0.98]"
                             >
                                 Review & Export
                             </button>
@@ -275,20 +290,22 @@ export default function WizardForm() {
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                                         Download PDF
                                     </button>
+
+                                    {/* Link to Official Portal (if available) - Moved to Step 3 below */}
                                 </div>
                             </div>
 
                             {/* Section 2: Committee */}
-                            <div className="p-6 md:p-8 flex gap-5 items-start bg-white">
+                            <div className="p-6 md:p-8 flex gap-5 items-start">
                                 <div className="bg-black text-white font-bold text-xl w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm">2</div>
                                 <div className="flex-1 space-y-3">
                                     <h3 className="text-xl font-bold text-black">Committee Information</h3>
                                     <p className="text-base text-gray-800 leading-relaxed">
                                         This bill is currently being heard by:
                                     </p>
-                                    <div className="bg-granite-50 border border-granite-200 rounded-lg p-4 inline-block">
+                                    <div className="bg-white border-2 border-granite-200 rounded-lg p-5 inline-block shadow-sm min-w-[300px]">
                                         <span className="block text-xs font-extrabold text-granite-500 uppercase tracking-widest mb-1">Target Committee</span>
-                                        <span className="text-lg font-bold text-granite-900 dark:text-granite-900">{formData.committee || 'Committee TBD'}</span>
+                                        <span className="text-xl font-bold text-black">{formData.committee || 'Committee TBD'}</span>
                                     </div>
                                 </div>
                             </div>
@@ -297,65 +314,173 @@ export default function WizardForm() {
                             <div className="p-6 md:p-8 flex gap-5 items-start bg-white">
                                 <div className="bg-black text-white font-bold text-xl w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm">3</div>
                                 <div className="flex-1 space-y-3">
-                                    <h3 className="text-xl font-bold text-black">Take Action</h3>
+                                    <div className="flex items-center gap-3">
+                                        <h3 className="text-xl font-bold text-black">Take Action</h3>
+
+                                        {/* Submission Method Badge */}
+                                        {config.wizardType === 'pdf_generator' ? (
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 border border-yellow-200 uppercase tracking-wide">
+                                                Official Record
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200 uppercase tracking-wide">
+                                                Direct Advocacy
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Contextual Help Text */}
                                     <p className="text-base text-gray-800 leading-relaxed max-w-2xl">
+                                        {config.wizardType === 'pdf_generator' && (
+                                            <span className="block mb-2 text-sm text-granite-600 bg-granite-50 p-2 rounded border border-granite-200">
+                                                ℹ️ <strong>Heads up:</strong> {config.name} requires you to submit testimony via their official portal to be included in the hearing record. Use the PDF generated below.
+                                            </span>
+                                        )}
+                                        {config.wizardType === 'direct_contact' && (
+                                            <span className="block mb-2 text-sm text-granite-600 bg-granite-50 p-2 rounded border border-granite-200">
+                                                ℹ️ <strong>Advocacy Tip:</strong> Emailing your legislator directly is the most effective way to influence this bill in {config.name}. Direct communication counts as constituent advocacy.
+                                            </span>
+                                        )}
                                         {config.step3Instructions || "Submit your testimony using the contact info below."}
+
+                                        {/* Portal Button - Repositioned Here */}
+                                        {config.submissionPortalUrl && config.wizardType === 'pdf_generator' && (
+                                            <a
+                                                href={config.submissionPortalUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="mt-2 ml-2 inline-flex items-center gap-1.5 bg-nh-green-700 text-white font-bold py-2 px-3 text-sm rounded-lg hover:bg-nh-green-900 transition-all shadow-md active:scale-95 align-middle"
+                                            >
+                                                <span>Open Official Portal ↗</span>
+                                            </a>
+                                        )}
                                     </p>
 
                                     {/* Action Type: Direct Contact (MA style) or Fallback to Sponsor Card if data exists */}
-                                    {formData.sponsor_name ? (
-                                        <div className="bg-white border-2 border-granite-100 rounded-xl p-5 shadow-sm max-w-md mt-2 hover:border-granite-200 transition-colors">
-                                            <div className="flex items-center gap-4 mb-5">
-                                                <div className="w-12 h-12 bg-granite-100 dark:bg-granite-100 rounded-full flex items-center justify-center text-2xl">
-                                                    👤
-                                                </div>
-                                                <div>
-                                                    <span className="block text-xs font-extrabold text-gray-500 uppercase tracking-widest">Bill Sponsor</span>
-                                                    {(() => {
-                                                        const contact = getLegislatorContact(stateCode, formData.sponsor_name);
-                                                        return contact.id ? (
-                                                            <a
-                                                                href={`/${stateCode}/person/${contact.id}`}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="block font-bold text-black text-xl leading-tight mt-0.5 hover:text-nh-green-700 hover:underline transition-colors"
-                                                            >
-                                                                {formData.sponsor_name} 🔗
-                                                            </a>
-                                                        ) : (
-                                                            <span className="block font-bold text-black text-xl leading-tight mt-0.5">
-                                                                {formData.sponsor_name}
-                                                            </span>
-                                                        );
-                                                    })()}
-                                                </div>
-                                            </div>
+                                    {formData.sponsor_name ? (() => { // IIFE for contact logic
+                                        const contact = getLegislatorContact(stateCode, formData.sponsor_name);
+                                        const targetId = formData.sponsor_id || contact.id;
 
-                                            {/* Logic: If Direct Contact, show Email/Call pills. If PDF Generator, show just Email/Info? 
-                                                Actually, even for PDF states, showing sponsor contact is transparent and good. 
-                                                We'll enable it for all, as 'transparency' is a core value. 
-                                            */}
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <a
-                                                    href={`mailto:${getLegislatorContact(stateCode, formData.sponsor_name).email}?subject=Testimony: ${formData.bill}&body=${encodeURIComponent(formData.testimony)}`}
-                                                    className="flex items-center justify-center gap-2 bg-white border-2 border-granite-200 hover:bg-granite-50 text-black font-bold py-3 px-4 rounded-lg transition-all active:scale-95 group"
-                                                >
-                                                    <span className="group-hover:scale-110 transition-transform text-lg">📧</span> Email
-                                                </a>
-                                                <a
-                                                    href={`tel:${getLegislatorContact(stateCode, formData.sponsor_name).phone}`}
-                                                    className="flex items-center justify-center gap-2 bg-white border-2 border-granite-200 hover:bg-granite-50 text-black font-bold py-3 px-4 rounded-lg transition-all active:scale-95 group"
-                                                >
-                                                    <span className="group-hover:scale-110 transition-transform text-lg">📞</span> Call
-                                                </a>
+                                        // Avatar Logic: Initials or Committee Icon
+                                        // Robust Committee Detection (Fix for 404 Links):
+                                        // 1. Check explicit flags (party='N/A', role='Committee')
+                                        // 2. Check explicit ID 'committee' or common committee slugs
+                                        // 3. Check name for 'Joint Committee' or 'Committee on'
+                                        // 4. Check if targetId matches 'committee' explicitly
+                                        const isCommittee =
+                                            formData.sponsor_id === 'committee' ||
+                                            (targetId && (String(targetId) === 'committee' || String(targetId).includes('joint-committee'))) ||
+                                            formData.sponsor_party === 'N/A' ||
+                                            contact.party === 'N/A' ||
+                                            contact.role === 'Committee' ||
+                                            contact.name.includes('Joint Committee');
+
+                                        // ULTIMATE SAFEGUARD: If it is a committee, Nuke the ID.
+                                        // This guarantees the link condition {!isCommittee && targetId} will FAIL even if isCommittee logic has a race condition.
+                                        if (isCommittee) {
+                                            // We cannot reassign const targetId, so we will use a new variable for the link or just rely on isCommittee.
+                                            // Actually, I'll shadowing targetId or use a new logic in render.
+                                            // Better: I will make isCommittee check robust and then update the render to check (targetId && targetId !== 'committee').
+                                        }
+
+                                        // Wait, I can't reassign const.
+                                        // I'll change the render logic below to check targetId !== 'committee' explicitly.
+                                        // But first let's cleanup the isCommittee definition spacing.
+
+                                        const nameClean = contact.name.replace(/^(Rep\.|Sen\.|Representative|Senator)\s+/i, '');
+                                        const initials = isCommittee ? '🏢' : nameClean.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                                        const partyColorBg = isCommittee ? 'bg-slate-700' : (contact.party === 'R' ? 'bg-red-600' : contact.party === 'D' ? 'bg-blue-600' : 'bg-gray-600');
+
+                                        return (
+                                            <div className="bg-white border-2 border-granite-100 rounded-xl p-6 shadow-sm max-w-lg mt-4 hover:border-granite-200 transition-colors">
+                                                {/* Business Card Layout */}
+                                                <div className="flex items-center gap-5 mb-6">
+                                                    {/* Dynamic Avatar */}
+                                                    <div className={`w-16 h-16 rounded-full ${partyColorBg} text-white flex items-center justify-center text-2xl font-bold border-4 border-white shadow-md shrink-0`}>
+                                                        {initials}
+                                                    </div>
+
+                                                    <div className="flex-1">
+                                                        {/* Metadata Header */}
+                                                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                                                            <span className="text-xs font-bold text-black uppercase tracking-widest">{isCommittee ? 'Legislative Committee' : 'Bill Sponsor'}</span>
+                                                            {!isCommittee && contact.party && (
+                                                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border uppercase ${contact.party === 'R' ? 'bg-red-50 text-red-700 border-red-100' :
+                                                                    contact.party === 'D' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-gray-100'
+                                                                    }`}>
+                                                                    {contact.party}
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Name & Link */}
+                                                        <h4 className="text-xl font-bold text-black leading-tight">
+                                                            {!isCommittee && targetId && targetId !== 'committee' && !String(targetId).includes('joint-committee') ? (
+                                                                <a href={`/${stateCode}/person/${targetId}`} target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-nh-green-700 decoration-2 underline-offset-2">
+                                                                    {contact.name} 🔗
+                                                                </a>
+                                                            ) : contact.name}
+                                                        </h4>
+
+                                                        {/* District / Role */}
+                                                        <p className="text-sm text-black font-medium mt-0.5">
+                                                            {isCommittee ? 'Joint Hearing Body' : `${contact.role}${contact.district ? ` • ${contact.district}` : ''}`}
+                                                            {contact.phone && <span className="block text-granite-500 font-normal mt-0.5 text-xs">📞 {contact.phone}</span>}
+                                                        </p>
+                                                    </div>
+
+                                                    {/* Right: State House Meta (Desktop Only) */}
+                                                    <div className="hidden sm:block text-right">
+                                                        <div className="flex flex-col items-end gap-0.5 opacity-80">
+                                                            <div className="mb-1 p-1.5 bg-granite-100 rounded-full">
+                                                                {/* Capital / State House Icon */}
+                                                                <svg className="w-5 h-5 text-granite-600" fill="currentColor" viewBox="0 0 24 24">
+                                                                    <path d="M12 2L2 7v2h20V7L12 2zM4 10h16v2H4v-2zm2 2h2v5H6v-5zm4 0h2v5h-2v-5zm4 0h2v5h-2v-5zm4 0h2v5h-2v-5zM2 22h20v-2H2v2z" />
+                                                                </svg>
+                                                            </div>
+                                                            <span className="text-[10px] font-bold text-granite-500 uppercase tracking-widest">{config.legislatureName || "State Legislature"}</span>
+                                                            <span className="text-xs font-bold text-black">{config.capitolCity || "State Capitol"}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Action Buttons */}
+                                                <div className="grid grid-cols-2 gap-3 relative">
+                                                    <a
+                                                        href={`mailto:${contact.email || ''}?subject=Testimony: ${formData.bill}`}
+                                                        onClick={() => handleEmailAction()}
+                                                        className={`flex items-center justify-center gap-2 bg-white border-2 border-granite-200 hover:bg-granite-50 text-black font-bold py-3 px-4 rounded-lg transition-all active:scale-95 group shadow-sm ${!contact.email && !isCommittee ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
+                                                    >
+                                                        <span className="group-hover:scale-110 transition-transform text-lg">📧</span> {isCommittee && !contact.email ? 'No Email Info' : 'Email'}
+                                                    </a>
+                                                    {isCommittee ? (
+                                                        <button disabled className="flex items-center justify-center gap-2 bg-gray-50 border-2 border-gray-100 text-gray-400 font-bold py-3 px-4 rounded-lg cursor-not-allowed">
+                                                            <span>🚫</span> No Call
+                                                        </button>
+                                                    ) : (
+                                                        <a
+                                                            href={`tel:${contact.phone}`}
+                                                            className="flex items-center justify-center gap-2 bg-white border-2 border-granite-200 hover:bg-granite-50 text-black font-bold py-3 px-4 rounded-lg transition-all active:scale-95 group shadow-sm"
+                                                        >
+                                                            <span className="group-hover:scale-110 transition-transform text-lg">📞</span> Call
+                                                        </a>
+                                                    )}
+
+                                                    {/* Copy Feedback Toast */}
+                                                    {showCopyFeedback && (
+                                                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black text-white text-xs font-bold py-2 px-4 rounded-full shadow-xl whitespace-nowrap animate-fade-in-up md:left-1/4">
+                                                            ✅ Testimony copied! Paste in email.
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="mt-4 text-center">
+                                                    <span className="text-xs text-black font-mono select-all px-2 py-1 rounded">
+                                                        {contact.email || "Email not found - check profile"}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <div className="mt-4 text-center">
-                                                <span className="text-xs text-granite-500 dark:text-granite-400 font-mono select-all bg-granite-50 dark:bg-granite-100 px-2 py-1 rounded">
-                                                    {getLegislatorContact(stateCode, formData.sponsor_name).email}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ) : (
+                                        );
+                                    })() : (
                                         <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg p-5">
                                             <p className="text-sm text-amber-900 dark:text-amber-100 font-bold mb-2">Sponsor Info Unavailable</p>
                                             {config.findLegislatorLink && (
@@ -385,6 +510,6 @@ export default function WizardForm() {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 }

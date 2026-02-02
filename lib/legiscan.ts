@@ -80,7 +80,7 @@ const normalizeArray = (info: any): any[] => {
 };
 
 // Helper to get the correct session ID for the current year
-export const getActiveSessionId = async (state: string): Promise<number | null> => {
+export const getActiveSessionId = async (state: string): Promise<{ id: number, year: number } | null> => {
     try {
         const API_KEY = process.env.LEGISCAN_API_KEY; // Ensure API KEY is available
         const res = await fetch(`${BASE_URL}?key=${API_KEY}&op=getSessionList&state=${state}`);
@@ -94,20 +94,36 @@ export const getActiveSessionId = async (state: string): Promise<number | null> 
         // Find session covering today
         // Prefer "Regular Session" if multiple are active
         const currentYear = new Date().getFullYear();
-        const activeSessions = data.sessions.filter((s: any) =>
-            s.year_start <= currentYear && s.year_end >= currentYear
+
+        // Filter for sessions in current or last year
+        let relevantSessions = data.sessions.filter((s: any) =>
+            s.year_start >= currentYear - 1
         );
 
-        if (activeSessions.length === 0) {
-            // Fallback: Just get the most recent one period
-            return data.sessions[0]?.session_id || null;
+        // Sort by Year Descending
+        relevantSessions.sort((a: any, b: any) => b.year_start - a.year_start);
+
+        // 1. Try to find the latest session that actually has data (dataset_hash is not null)
+        const activeWithData = relevantSessions.find((s: any) => s.dataset_hash);
+
+        if (activeWithData) {
+            if (process.env.DEBUG) console.log(`State ${state}: Using most recent populated session: ${activeWithData.year_start} (ID: ${activeWithData.session_id})`);
+            return { id: activeWithData.session_id, year: activeWithData.year_start };
         }
 
-        // Sort: Prioritize special/regular based on specific strings if needed, 
-        // but generally taking the most recent 'active' one is good.
-        // For now, take the first one or the one marked explicitly as 'regular'
-        const regular = activeSessions.find((s: any) => s.session_name.toLowerCase().includes('regular'));
-        return regular ? regular.session_id : activeSessions[0].session_id;
+        // 2. Fallback: If no data hash (e.g. very new session), just take the newest one
+        // and hope for the best, or maybe the previous year?
+        // Let's take the newest one but warn.
+        // Actually, for the demo, we prefer data. If 2026 is empty, show 2025.
+        // The above check `activeWithData` handles this! It skips 2026 (null hash) and picks 2025.
+
+        if (relevantSessions.length > 0) {
+            if (process.env.DEBUG) console.log(`State ${state}: No populated session found? Defaulting to newest: ${relevantSessions[0].year_start}`);
+            return { id: relevantSessions[0].session_id, year: relevantSessions[0].year_start };
+        }
+
+        const fallback = data.sessions[0];
+        return fallback ? { id: fallback.session_id, year: fallback.year_start } : null;
 
     } catch (e) {
         console.error(`Failed to get session list for ${state}`, e);
@@ -128,13 +144,15 @@ export const legiscan = {
 
                 try {
                     // 1. Get Session ID Explicitly
-                    const sessionId = await getActiveSessionId(state);
-                    if (!sessionId) {
+                    const sessionInfo = await getActiveSessionId(state);
+                    if (!sessionInfo) {
                         console.error(`❌ Could not find active session for ${state}`);
                         return { hearings: getMockHearings(state), amendments: [] };
                     }
+                    const { id: sessionId, year: sessionYear } = sessionInfo;
+                    const isHistorical = sessionYear < new Date().getFullYear();
 
-                    console.log(`📡 Fetching Master List for ${state} (Session ${sessionId})...`);
+                    if (process.env.DEBUG) console.log(`📡 Fetching Master List for ${state} (Session ${sessionId}, Historical: ${isHistorical})...`);
                     const masterListRes = await fetch(`${BASE_URL}?key=${API_KEY}&op=getMasterList&id=${sessionId}`);
                     const masterData = await masterListRes.json();
 
@@ -153,7 +171,7 @@ export const legiscan = {
                         .sort((a: any, b: any) => new Date(b.last_action_date).getTime() - new Date(a.last_action_date).getTime())
                         .slice(0, 40) as any[];
 
-                    console.log(`🔍 Scanning top ${bills.length} bills for hearings & amendments...`);
+                    if (process.env.DEBUG) console.log(`🔍 Scanning top ${bills.length} bills for hearings & amendments...`);
 
                     const realHearings: Hearing[] = [];
                     const recentAmendments: AmendedBill[] = [];
@@ -183,14 +201,16 @@ export const legiscan = {
                             if (!bill) return;
 
                             // ... Enrichment Logic ...
-                            const sponsorName = bill.sponsors && bill.sponsors[0] ? bill.sponsors[0].name : 'Unknown';
+                            // Enrichment Logic (with Committee Fallback)
+                            const sponsorName = (bill.sponsors && bill.sponsors[0]) ? bill.sponsors[0].name : (bill.committee ? `Joint Committee on ${bill.committee.name}` : 'Unknown');
                             const apiSponsor = bill.sponsors && bill.sponsors[0];
                             const enriched = enrichment.getPersonDetails(sponsorName);
 
                             const sponsorInfo = {
                                 name: sponsorName,
-                                id: apiSponsor?.people_id ? String(apiSponsor.people_id) : enriched.id,
-                                party: (apiSponsor ? apiSponsor.party : 'N/A') as 'R' | 'D' | 'I',
+                                id: apiSponsor?.people_id ? String(apiSponsor.people_id) : (bill.committee ? 'committee' : enriched.id),
+                                party: (apiSponsor ? apiSponsor.party : 'N/A') as 'R' | 'D' | 'I' | 'N/A',
+                                role: (bill.committee && !apiSponsor) ? 'Committee' : (apiSponsor?.role || 'Representative'),
                                 next_election: enriched.next_election || '2026',
                                 major_donors: enriched.major_donors || []
                             };
@@ -199,7 +219,8 @@ export const legiscan = {
                             if (bill.calendar && bill.calendar.length > 0) {
                                 bill.calendar.forEach((event: any) => {
                                     const hearingDate = parseDate(event.date);
-                                    if (hearingDate >= today) {
+                                    // Relax filter for historical sessions
+                                    if (hearingDate >= today || isHistorical) {
                                         let formattedTime = event.time;
                                         try {
                                             const [h, m] = event.time.split(':');
@@ -220,7 +241,7 @@ export const legiscan = {
                                             bill_id: bill.bill_id,
                                             bill_url: bill.url,
                                             type: bill.body_short === 'H' ? 'House' : 'Senate',
-                                            ai_summary: bill.summary ? (bill.summary.length > 200 ? bill.summary.substring(0, 200) + '...' : bill.summary) : (bill.description || ''),
+                                            ai_summary: bill.summary ? (bill.summary.length > 140 ? bill.summary.substring(0, 140) + '...' : bill.summary) : (bill.description || ''),
                                             sponsor_info: sponsorInfo,
                                             smart_pills: [
                                                 ...enrichment.generateSmartPills(bill.title),
@@ -243,8 +264,22 @@ export const legiscan = {
                                     const isRecent = (today.getTime() - evtDate.getTime()) / (1000 * 3600 * 24) < 90;
                                     const actionLower = event.action.toLowerCase();
                                     const isAmendment = actionLower.includes('amend') || actionLower.includes('report') || actionLower.includes('otpa') || actionLower.includes('adopted') || actionLower.includes('concur');
-                                    return isRecent && isAmendment;
+                                    // Allow if recent OR historical session
+                                    return (isRecent || isHistorical) && isAmendment;
                                 });
+
+                                const sponsorName = (bill.sponsors && bill.sponsors[0]) ? bill.sponsors[0].name : (bill.committee ? `Joint Committee on ${bill.committee.name}` : 'Unknown');
+                                const apiSponsor = bill.sponsors && bill.sponsors[0];
+                                const enriched = enrichment.getPersonDetails(sponsorName);
+
+                                const sponsorInfo = {
+                                    name: sponsorName,
+                                    id: apiSponsor?.people_id ? String(apiSponsor.people_id) : (bill.committee ? 'committee' : enriched.id),
+                                    party: (apiSponsor ? apiSponsor.party : 'N/A') as 'R' | 'D' | 'I' | 'N/A',
+                                    role: (bill.committee && !apiSponsor) ? 'Committee' : (apiSponsor?.role || 'Representative'),
+                                    next_election: enriched.next_election || '2026',
+                                    major_donors: enriched.major_donors || []
+                                };
 
                                 if (recentAmendmentEvent) {
                                     recentAmendments.push({
@@ -272,6 +307,55 @@ export const legiscan = {
 
                     realHearings.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
                     recentAmendments.sort((a, b) => new Date(b.amendment_date).getTime() - new Date(a.amendment_date).getTime());
+
+                    // FALLBACK: If "Ghost Town" (No hearings, No amendments), show *something*
+                    // Just take the top 5 most recently active bills and treat them as "Recent Activity"
+                    if (realHearings.length === 0 && recentAmendments.length === 0) {
+                        console.log(`State ${state}: No hearings or amendments found. Activating 'Recent Activity' fallback.`);
+
+                        const recentActivity = await Promise.all(bills.slice(0, 5).map(async (billMeta: any) => {
+                            if (!billMeta.bill_id) return null;
+                            try {
+                                const detailRes = await fetch(`${BASE_URL}?key=${API_KEY}&op=getBill&id=${billMeta.bill_id}`);
+                                const detailData = await detailRes.json();
+                                const bill = detailData.bill;
+                                if (!bill) return null;
+
+                                const sponsorName = (bill.sponsors && bill.sponsors[0]) ? bill.sponsors[0].name : (bill.committee ? `Joint Committee on ${bill.committee.name}` : 'Unknown');
+                                const apiSponsor = bill.sponsors && bill.sponsors[0];
+                                const enriched = enrichment.getPersonDetails(sponsorName);
+
+                                const sponsorInfo = {
+                                    name: sponsorName,
+                                    id: apiSponsor?.people_id ? String(apiSponsor.people_id) : (bill.committee ? 'committee' : enriched.id),
+                                    party: (apiSponsor ? apiSponsor.party : 'N/A') as 'R' | 'D' | 'I' | 'N/A',
+                                    role: (bill.committee && !apiSponsor) ? 'Committee' : (apiSponsor?.role || 'Representative'),
+                                    next_election: enriched.next_election || '2026',
+                                    major_donors: enriched.major_donors || []
+                                };
+
+                                // Create a "Generic Activity" entry
+                                // We map it to AmendedBill type for UI compatibility, 
+                                // but label the action clearly.
+                                return {
+                                    bill_id: bill.bill_id,
+                                    bill_number: bill.bill_number,
+                                    description: bill.title,
+                                    amendment_date: bill.last_action_date,
+                                    amendment_action: bill.last_action || 'Updated',
+                                    sponsor_info: sponsorInfo,
+                                    link: bill.url,
+                                    smart_pills: [
+                                        ...enrichment.generateSmartPills(bill.title),
+                                        { label: 'Recent Update', category: 'urgency', icon: '⚡', description: 'Recently active' }
+                                    ] as Pill[]
+                                };
+                            } catch (e) { return null; }
+                        }));
+
+                        const validFallback = recentActivity.filter(Boolean) as AmendedBill[];
+                        recentAmendments.push(...validFallback);
+                    }
 
                     return { hearings: realHearings, amendments: recentAmendments };
 
@@ -346,39 +430,99 @@ export const legiscan = {
         }, [`person-v2-${peopleId}`], 86400 * 30); // Cache person details for 30 days (rarely changes)
     },
 
-    getSponsoredList: async (peopleId: string, sessionId?: number): Promise<any[] | null> => {
+    // Generic Search
+    searchBills: async (state: string, query: string): Promise<any[]> => {
+        return cachedData(async () => {
+            const API_KEY = process.env.LEGISCAN_API_KEY;
+            if (!API_KEY) return [];
+            try {
+                const res = await fetch(`${BASE_URL}?key=${API_KEY}&op=getSearch&state=${state}&query=${encodeURIComponent(query)}`);
+                const data = await res.json();
+                if (data.status === 'ERROR' || !data.searchresult) return [];
+
+                return normalizeArray(data.searchresult);
+            } catch (e) {
+                return [];
+            }
+        }, [`search-${state}-${query}`], 3600); // Cache search for 1 hour
+    },
+
+    getSponsoredList: async (peopleId: string, sessionId?: number, stateCode: string = 'NH'): Promise<any[] | null> => {
         return cachedData(async () => {
             const API_KEY = process.env.LEGISCAN_API_KEY;
             if (!API_KEY) return null;
             try {
-                // Fetch ALL sponsored bills (no session filter) to ensure we don't miss anything.
-                // We will sort locally.
+                // 1. Try Standard Lookup
                 let url = `${BASE_URL}?key=${API_KEY}&op=getSponsoredList&id=${peopleId}`;
+                if (sessionId) {
+                    url += `&session_id=${sessionId}`;
+                }
                 console.log(`📡 fetching sponsored list: ${url}`);
 
                 const res = await fetch(url);
                 const data = await res.json();
 
-                console.log(`✅ getSponsoredList(${peopleId}) - Status: ${data.status}`);
-
-                if (data.status === "ERROR") {
-                    console.warn(`   ├─ API Error: ${data.alert?.message || 'Unknown'}`);
-                    return [];
+                let bills = [];
+                if (data.sponsoredbills) {
+                    bills = normalizeArray(data.sponsoredbills);
                 }
-                if (!data.sponsoredbills) return [];
 
-                let bills = normalizeArray(data.sponsoredbills);
-                console.log(`   ├─ Bills: ${bills.length} found (type was: ${Array.isArray(data.sponsoredbills) ? 'Array' : typeof data.sponsoredbills})`);
+                // 2. FALLBACK: If list is empty, try Name Search (Fix for broken API links)
+                if (bills.length === 0) {
+                    console.log(`⚠️ No direct sponsorships found for ${peopleId}. Attempting Search Fallback...`);
 
-                // Sort by Year Descending, then Bill ID Descending (Proxy for newest)
+                    // A) Get Person Name
+                    const person = await legiscan.getPerson(peopleId);
+                    if (person && person.name) {
+                        const nameQuery = person.name; // e.g. "David Walker"
+                        console.log(`   🔎 Searching for bills matching: "${nameQuery}" in ${stateCode}`);
+
+                        // B) Search Bills using properly passed state code
+                        const searchResults = await legiscan.searchBills(stateCode, nameQuery);
+
+                        // C) Verify Sponsorship by fetching details (Limit to top 10 to save API)
+                        // This is expensive, so we only do it if absolutely necessary
+                        const potentialBills = searchResults.slice(0, 10);
+
+                        console.log(`   🔎 Found ${potentialBills.length} potential matches. Verifying...`);
+
+                        const verifiedBills = [];
+                        for (const b of potentialBills) {
+                            if (!b.bill_id) continue;
+                            const details = await legiscan.getBillDetails(b.bill_id) as any;
+                            if (details && details.sponsors) {
+                                // Check if OUR guy is in the sponsor list
+                                const isSponsor = details.sponsors.some((s: any) => String(s.people_id) === String(peopleId));
+                                if (isSponsor) {
+                                    // Map to the "SponsoredList" format (which is lighter than full bill)
+                                    verifiedBills.push({
+                                        bill_id: b.bill_id,
+                                        bill_number: b.bill_number,
+                                        title: b.title,
+                                        description: b.title, // Search results put title in title
+                                        last_action: b.last_action,
+                                        last_action_date: b.last_action_date,
+                                        url: b.text_url || b.url
+                                    });
+                                }
+                            }
+                        }
+                        console.log(`   ✅ Verified ${verifiedBills.length} bills via fallback.`);
+                        bills = verifiedBills;
+                    }
+                }
+
+                console.log(`   ├─ Bills: ${bills.length} found`);
+
+                // Sort by Bill ID Descending (Proxy for newest)
                 return bills.sort((a: any, b: any) => {
-                    // Safe access to session_id and bill_id
-                    return (b.session_id - a.session_id) || (b.bill_id - a.bill_id);
+                    return (b.bill_id - a.bill_id);
                 });
 
             } catch (e) {
+                console.error("SponsoredList Error", e);
                 return null;
             }
-        }, [`sponsored-list-v2-${peopleId}`], 86400 * 7); // Cache for 7 days
+        }, [`sponsored-list-v3-${peopleId}`], 86400 * 7); // Cache for 7 days
     }
 };
