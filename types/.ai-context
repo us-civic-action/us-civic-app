@@ -1,0 +1,73 @@
+Accessibility Guardrails & Design System Rules
+
+Goal: Prevent "ghost text" and ensure universal readability across all modes (Light, Dark, High Contrast).
+
+1. Configuration Rules (CRITICAL)
+
+    Tailwind Dark Mode:
+
+        NEVER rely on the default media strategy (OS preference).
+
+        ALWAYS explicitly set darkMode: 'class' in your tailwind.config.js or script tag.
+
+        Rationale: Prevents dark:text-white from being applied on a white background if the OS is in Dark Mode but the site is defaulting to Light Mode.
+
+2. Text Color Rules
+
+    No Default Inheritance: NEVER rely on default inheritance for primary text.
+
+        ❌ Bad: <h3>Title</h3>
+
+        ✅ Good: <h3 className="text-slate-900 dark:text-white">Title</h3>
+
+    Explicit Mode Separation: Always separate Light and Dark modes explicitly.
+
+        Pattern: text-[COLOR-900] dark:text-[COLOR-100/white]
+
+        Example: text-slate-900 dark:text-slate-100
+
+    High Contrast Mode:
+
+        Ensure text is pure Black (#000) on White, or pure White (#FFF) on Black.
+
+        Use text-black dark:text-white for critical information.
+
+    The "Nuclear Option" Failsafe:
+
+        For critical headers (H1, H2) or primary CTAs, consider adding an inline style failsafe:
+
+        style={{ color: isDarkMode ? '#fff' : '#000' }}
+
+        This guarantees visibility even if CSS classes fail to load or conflict.
+
+3. Component Backgrounds
+
+    Card Containers:
+
+        Always define the background color and the text color together.
+
+        className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+
+4. The "Ghost Text" Prevention Prompt
+
+When implementing UI components, follow these strict accessibility rules:
+
+    Configuration: Ensure tailwind.config has darkMode: 'class' set.
+
+    Explicit Colors: Define text colors for both 'light' (default) and 'dark:' modes. Do not assume parent text colors will inherit correctly.
+
+    Contrast: * Light Mode: White/Slate-50 bg -> Slate-900/Black text.
+
+        Dark Mode: Slate-900 bg -> White text.
+
+    Failsafe: For critical headers, consider inline style overrides to guarantee 100% visibility.
+
+5. Testing Checklist
+
+    [ ] Switch Modes: Toggle Light/Dark mode and ensure NO text disappears.
+
+    [ ] OS Override Check: Toggle OS Dark/Light mode while the site is in the opposite mode. Text must remain visible.
+
+    [ ] No "Gray on Gray": Avoid text-slate-500 on bg-slate-800 without checking contrast.
+
+  [ ] Interactive Elements: Ensure buttons have clear text that doesn't blend into the button background.

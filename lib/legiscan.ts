@@ -165,12 +165,20 @@ export const legiscan = {
                     }
 
                     // 2. Sort bills by most recently active
-                    // REDUCED LIMIT: Only scan top 40 actively moving bills to save API calls (The "Miser" Strategy)
-                    const bills = (Object.values(masterData.masterlist || {}) as { bill_id: number; last_action_date: string }[])
-                        .sort((a, b) => new Date(b.last_action_date).getTime() - new Date(a.last_action_date).getTime())
-                        .slice(0, 40);
+                    // 2. Sort bills by most recently active
+                    // REDUCED LIMIT: Only scan top 30 actively moving bills (15 House + 15 Senate) to ensure coverage and save API calls.
+                    const allBills = (Object.values(masterData.masterlist || {}) as { bill_id: number; number?: string; last_action_date: string }[])
+                        .filter(b => b && b.number) // Filter out invalid entries
+                        .sort((a, b) => new Date(b.last_action_date).getTime() - new Date(a.last_action_date).getTime());
 
-                    if (process.env.DEBUG) console.log(`🔍 Scanning top ${bills.length} bills for hearings & amendments...`);
+                    // Split by Chamber (Senate starts with 'S', House with 'H', usually)
+                    const senateBills = allBills.filter(b => (b.number as string).startsWith('S')).slice(0, 15);
+                    const houseBills = allBills.filter(b => (b.number as string).startsWith('H')).slice(0, 15);
+
+                    // Combine and dedup (just in case)
+                    const bills = [...new Set([...senateBills, ...houseBills])];
+
+                    if (process.env.DEBUG) console.log(`🔍 Scanning top ${bills.length} bills (${senateBills.length} Senate, ${houseBills.length} House) for hearings & amendments...`);
 
                     const realHearings: Hearing[] = [];
                     const recentAmendments: AmendedBill[] = [];
@@ -240,7 +248,7 @@ export const legiscan = {
                                             bill_id: bill.bill_id,
                                             bill_url: bill.url,
                                             type: bill.body_short === 'H' ? 'House' : 'Senate',
-                                            ai_summary: bill.summary ? (bill.summary.length > 140 ? bill.summary.substring(0, 140) + '...' : bill.summary) : (bill.description || ''),
+                                            ai_summary: bill.summary ? (bill.summary.length > 350 ? bill.summary.substring(0, 350) + '...' : bill.summary) : (bill.description || ''),
                                             sponsor_info: sponsorInfo,
                                             smart_pills: [
                                                 ...enrichment.generateSmartPills(bill.title),
@@ -524,5 +532,32 @@ export const legiscan = {
                 return null;
             }
         }, [`sponsored-list-v3-${peopleId}`], 86400 * 7); // Cache for 7 days
+    },
+
+    getBillStatusBatch: async (billIds: number[], state: string = 'NH'): Promise<Record<string, unknown>[]> => {
+        return cachedData(async () => {
+            const API_KEY = process.env.LEGISCAN_API_KEY;
+            if (!API_KEY) return [];
+            try {
+                // 1. Get Session ID
+                const sessionInfo = await getActiveSessionId(state);
+                if (!sessionInfo) return [];
+
+                // 2. Get Master List (It's cached by getDashboardData usually, so this is cheap)
+                const masterListRes = await fetch(`${BASE_URL}?key=${API_KEY}&op=getMasterList&id=${sessionInfo.id}`);
+                const masterData = await masterListRes.json();
+
+                if (masterData.status === 'ERROR' || !masterData.masterlist) return [];
+
+                const allBills = normalizeArray(masterData.masterlist) as { bill_id: number; last_action_date: string; last_action: string; title: string, number: string }[];
+
+                // 3. Filter for requested IDs
+                return allBills.filter(b => billIds.includes(b.bill_id));
+
+            } catch (e) {
+                console.error("Batch Status Error", e);
+                return [];
+            }
+        }, [`batch-status-${state}-${billIds.sort().join('-')}`], 3600); // Cache for 1 hour
     }
 };
