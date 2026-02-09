@@ -137,8 +137,8 @@ export const legiscan = {
             async () => {
                 const API_KEY = process.env.LEGISCAN_API_KEY; // Re-read env inside cache context if needed
                 if (!API_KEY) {
-                    console.warn('⚠️ No LegiScan API Key found. Returning mock hearings only.');
-                    return { hearings: getMockHearings(state), amendments: [] };
+                    console.warn('⚠️ No LegiScan API Key found. Returning empty data.');
+                    return { hearings: [], amendments: [] };
                 }
 
                 try {
@@ -146,7 +146,7 @@ export const legiscan = {
                     const sessionInfo = await getActiveSessionId(state);
                     if (!sessionInfo) {
                         console.error(`❌ Could not find active session for ${state}`);
-                        return { hearings: getMockHearings(state), amendments: [] };
+                        return { hearings: [], amendments: [] };
                     }
                     const { id: sessionId, year: sessionYear } = sessionInfo;
                     const isHistorical = sessionYear < new Date().getFullYear();
@@ -161,7 +161,7 @@ export const legiscan = {
                             throw new Error('API_LIMIT');
                         }
                         console.error('LegiScan Error:', masterData.alert?.message);
-                        return { hearings: getMockHearings(state), amendments: [] };
+                        return { hearings: [], amendments: [] };
                     }
 
                     // 2. Sort bills by most recently active
@@ -369,10 +369,10 @@ export const legiscan = {
                 } catch (e) {
                     console.error('LegiScan Global Error:', e);
                     // Fallback to MOCK if everything explodes
-                    return { hearings: getMockHearings(state), amendments: [] };
+                    return { hearings: [], amendments: [] }; // Return empty, not mock data
                 }
             },
-            ['dashboard-data-v2', state], // Cache Key
+            ['dashboard-data-v3', state], // Cache Key
             3600 // Revalidate every 1 hour
         );
     },
