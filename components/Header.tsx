@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { ChevronDown, LayoutGrid, ShieldCheck } from "lucide-react";
 
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -51,6 +52,31 @@ export default function Header() {
                     >
                         Transparency
                     </Link>
+
+                    <div className="relative group/menu py-4">
+                        <button className="text-sm font-bold text-granite-900 dark:text-slate-200 hover:text-black dark:hover:text-white transition-colors flex items-center gap-1">
+                            Projects <ChevronDown className="w-4 h-4" />
+                        </button>
+                        <div className="absolute top-full right-0 w-48 pt-2 opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all duration-200 z-50 transform translate-y-2 group-hover/menu:translate-y-0">
+                            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden p-1">
+                                <a
+                                    href="https://us-civic-action.github.io/SAVE_ACT-Verifier/"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-black dark:hover:text-white rounded-lg transition-colors"
+                                >
+                                    <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" /> Save Act Verifier
+                                </a>
+                                <Link
+                                    href="/"
+                                    className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-black dark:hover:text-white rounded-lg transition-colors"
+                                >
+                                    <LayoutGrid className="w-4 h-4 text-blue-600 dark:text-blue-400" /> US Civic Action App
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+
                     <ThemeToggle />
                     <a
                         href="https://buy.stripe.com/cNi9ATgtb3vv9f6g1Sawo02"
