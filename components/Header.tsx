@@ -15,7 +15,7 @@ export default function Header() {
     const basePath = routeState ? `/${routeState.toLowerCase()}` : '';
 
     return (
-        <header className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 sticky top-0 z-[100] transition-colors">
+        <header className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 sticky top-0 z-[100] transition-colors pt-[env(safe-area-inset-top)]">
             <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
                 {/* Logo & Brand */}
                 <Link href="/" className="flex items-center gap-3 group">
