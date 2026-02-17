@@ -55,23 +55,35 @@ export default function Header() {
 
                     <div className="relative group/menu py-4">
                         <button className="text-sm font-bold text-granite-900 dark:text-slate-200 hover:text-black dark:hover:text-white transition-colors flex items-center gap-1">
-                            Projects <ChevronDown className="w-4 h-4" />
+                            Tools & Resources <ChevronDown className="w-4 h-4" />
                         </button>
-                        <div className="absolute top-full right-0 w-48 pt-2 opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all duration-200 z-50 transform translate-y-2 group-hover/menu:translate-y-0">
+                        <div className="absolute top-full right-0 w-56 pt-2 opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all duration-200 z-50 transform translate-y-2 group-hover/menu:translate-y-0">
                             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden p-1">
                                 <a
                                     href="https://us-civic-action.github.io/SAVE_ACT-Verifier/"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-black dark:hover:text-white rounded-lg transition-colors"
+                                    className="flex items-start gap-3 px-4 py-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-black dark:hover:text-white rounded-lg transition-colors group/item"
                                 >
-                                    <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" /> Save Act Verifier
+                                    <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+                                    <div>
+                                        <div className="mb-0.5">Save Act Verifier</div>
+                                        <p className="font-normal text-slate-500 dark:text-slate-400 text-[10px] leading-tight group-hover/item:text-slate-700 dark:group-hover/item:text-slate-300">
+                                            Check voting requirements
+                                        </p>
+                                    </div>
                                 </a>
                                 <Link
                                     href="/"
-                                    className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-black dark:hover:text-white rounded-lg transition-colors"
+                                    className="flex items-start gap-3 px-4 py-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-black dark:hover:text-white rounded-lg transition-colors group/item"
                                 >
-                                    <LayoutGrid className="w-4 h-4 text-blue-600 dark:text-blue-400" /> US Civic Action App
+                                    <LayoutGrid className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+                                    <div>
+                                        <div className="mb-0.5">US Civic Action App</div>
+                                        <p className="font-normal text-slate-500 dark:text-slate-400 text-[10px] leading-tight group-hover/item:text-slate-700 dark:group-hover/item:text-slate-300">
+                                            Track bills & hearings
+                                        </p>
+                                    </div>
                                 </Link>
                             </div>
                         </div>

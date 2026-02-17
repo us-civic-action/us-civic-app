@@ -89,18 +89,50 @@ export default function LandingPage() {
                         sizes="(max-width: 768px) 100vw, 300px"
                     />
                 </div>
-                <h1 className="text-4xl md:text-6xl font-black text-granite-900 mb-4 tracking-tight">
-                    Civic Action
+                <h1 className="text-5xl md:text-7xl font-black text-granite-900 mb-6 tracking-tight leading-tight">
+                    Civic Action <br />
+                    <span className="text-nh-green-600">Simplified.</span>
                 </h1>
-                <p className="text-xl text-granite-600 mb-12">
-                    Track bills. Find hearings. Make your voice heard.
+                <p className="text-xl md:text-2xl text-granite-600 mb-8 max-w-2xl mx-auto leading-relaxed">
+                    Find simplified civic actions, bill verifiers, and engagement tools for U.S. residents, open, free, and non-partisan.
                 </p>
+
+                {/* Feature Highlights */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl mb-16 px-4">
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-granite-200 dark:border-slate-700 hover:shadow-md transition-shadow">
+                        <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-4 mx-auto text-2xl">
+                            📜
+                        </div>
+                        <h3 className="text-lg font-bold text-granite-900 dark:text-white mb-2">Track Legislation</h3>
+                        <p className="text-sm text-granite-600 dark:text-slate-400">
+                            Monitor bills in your state legislature with real-time updates and simplified summaries.
+                        </p>
+                    </div>
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-granite-200 dark:border-slate-700 hover:shadow-md transition-shadow">
+                        <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mb-4 mx-auto text-2xl">
+                            🗣️
+                        </div>
+                        <h3 className="text-lg font-bold text-granite-900 dark:text-white mb-2">Find Hearings</h3>
+                        <p className="text-sm text-granite-600 dark:text-slate-400">
+                            Know when and where committees meet so you can testify and make your voice heard.
+                        </p>
+                    </div>
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-granite-200 dark:border-slate-700 hover:shadow-md transition-shadow">
+                        <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-4 mx-auto text-2xl">
+                            ✅
+                        </div>
+                        <h3 className="text-lg font-bold text-granite-900 dark:text-white mb-2">Verify Facts</h3>
+                        <p className="text-sm text-granite-600 dark:text-slate-400">
+                            Use our non-partisan tools to verify voting requirements and legislative text.
+                        </p>
+                    </div>
+                </div>
 
                 {favoriteStates.length > 0 && (
                     <div className="w-full mb-12">
                         <div className="flex items-center gap-2 mb-4 px-1">
                             <span className="text-yellow-500">⭐</span>
-                            <h3 className="text-sm font-black text-granite-400 uppercase tracking-widest">Your Favorites</h3>
+                            <h3 className="text-sm font-black text-granite-500 uppercase tracking-widest">Your Favorites</h3>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {favoriteStates.map(state => (
@@ -113,8 +145,8 @@ export default function LandingPage() {
 
                 <div className="w-full">
                     <div className="flex items-center gap-2 mb-4 px-1">
-                        <span className="text-granite-400">🇺🇸</span>
-                        <h3 className="text-sm font-black text-granite-400 uppercase tracking-widest">All States</h3>
+                        <span className="text-granite-500">🇺🇸</span>
+                        <h3 className="text-sm font-black text-granite-500 uppercase tracking-widest">All States</h3>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {sortedStates.map(state => (
