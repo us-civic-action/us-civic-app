@@ -1,0 +1,11 @@
+{
+	"appId": "com.uscivicaction.app",
+	"appName": "US Civic Action",
+	"webDir": "mobile-assets",
+	"server": {
+		"androidScheme": "https",
+		"url": "https://nh-civic-app.vercel.app",
+		"cleartext": true
+	},
+	"android": {}
+}

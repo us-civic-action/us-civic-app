@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ChevronDown, LayoutGrid, ShieldCheck } from "lucide-react";
+import { ChevronDown, LayoutGrid, ShieldCheck, Stethoscope } from "lucide-react";
 
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -59,10 +59,9 @@ export default function Header() {
                         </button>
                         <div className="absolute top-full right-0 w-56 pt-2 opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all duration-200 z-50 transform translate-y-2 group-hover/menu:translate-y-0">
                             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden p-1">
+                                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
                                 <a
-                                    href="https://us-civic-action.github.io/SAVE_ACT-Verifier/"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                    href="/save-act/"
                                     className="flex items-start gap-3 px-4 py-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-black dark:hover:text-white rounded-lg transition-colors group/item"
                                 >
                                     <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
@@ -70,6 +69,19 @@ export default function Header() {
                                         <div className="mb-0.5">Save Act Verifier</div>
                                         <p className="font-normal text-slate-500 dark:text-slate-400 text-[10px] leading-tight group-hover/item:text-slate-700 dark:group-hover/item:text-slate-300">
                                             Check voting requirements
+                                        </p>
+                                    </div>
+                                </a>
+                                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+                                <a
+                                    href="/medbill/"
+                                    className="flex items-start gap-3 px-4 py-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-black dark:hover:text-white rounded-lg transition-colors group/item"
+                                >
+                                    <Stethoscope className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+                                    <div>
+                                        <div className="mb-0.5">Medical Bill Auditor</div>
+                                        <p className="font-normal text-slate-500 dark:text-slate-400 text-[10px] leading-tight group-hover/item:text-slate-700 dark:group-hover/item:text-slate-300">
+                                            AI Bill Analysis
                                         </p>
                                     </div>
                                 </a>

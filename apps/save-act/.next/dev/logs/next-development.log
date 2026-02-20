@@ -1,0 +1,31 @@
+[00:00:00.901] Server  LOG     ✓ Ready in 637ms
+[00:00:01.397] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:01.438] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:01.608] Browser WARN    Image with src "/_next/static/media/civic-badge.b034c074.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:01.608] Browser WARN    Image with src "/_next/static/media/civic-badge.b034c074.png" has "fill" and a height value of 0. This is likely because the parent element of the image has not been styled to have a set height.
+[00:00:03.407] Browser WARN    Image with src "/_next/static/media/civic-badge.b034c074.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:03.407] Browser WARN    Image with src "/_next/static/media/civic-badge.b034c074.png" has "fill" and a height value of 0. This is likely because the parent element of the image has not been styled to have a set height.
+[00:00:10.374] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:10.533] Browser WARN    Image with src "/_next/static/media/civic-badge.b034c074.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:10.533] Browser WARN    Image with src "/_next/static/media/civic-badge.b034c074.png" has "fill" and a height value of 0. This is likely because the parent element of the image has not been styled to have a set height.
+[00:00:23.309] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:23.493] Browser WARN    Image with src "/_next/static/media/civic-badge.b034c074.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:23.493] Browser WARN    Image with src "/_next/static/media/civic-badge.b034c074.png" has "fill" and a height value of 0. This is likely because the parent element of the image has not been styled to have a set height.
+[00:00:25.363] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:25.513] Browser WARN    Image with src "/_next/static/media/civic-badge.b034c074.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:25.513] Browser WARN    Image with src "/_next/static/media/civic-badge.b034c074.png" has "fill" and a height value of 0. This is likely because the parent element of the image has not been styled to have a set height.
+[00:05:23.141] Server  ERROR   Error: ENOENT: no such file or directory, scandir 'C:\LLM_KNOWLEDGE\Legislate\nh-civic-app\apps\save-act\app'
+[00:05:23.144] Server  ERROR   ⨯ "unhandledRejection:" Error: ENOENT: no such file or directory, scandir 'C:\LLM_KNOWLEDGE\Legislate\nh-civic-app\apps\save-act\app'
+[00:05:23.147] Server  ERROR   ⨯ "unhandledRejection: " Error: ENOENT: no such file or directory, scandir 'C:\LLM_KNOWLEDGE\Legislate\nh-civic-app\apps\save-act\app'
+[00:05:23.163] Server  ERROR   Error: ENOENT: no such file or directory, scandir 'C:\LLM_KNOWLEDGE\Legislate\nh-civic-app\apps\save-act\app'
+[00:05:23.165] Server  ERROR   Error: ENOENT: no such file or directory, scandir 'C:\LLM_KNOWLEDGE\Legislate\nh-civic-app\apps\save-act\app'
+[00:05:23.170] Server  ERROR   Error: ENOENT: no such file or directory, scandir 'C:\LLM_KNOWLEDGE\Legislate\nh-civic-app\apps\save-act\app'
+[00:05:23.171] Server  ERROR   Error: ENOENT: no such file or directory, scandir 'C:\LLM_KNOWLEDGE\Legislate\nh-civic-app\apps\save-act\app'
+[00:05:23.184] Server  ERROR   Error: ENOENT: no such file or directory, scandir 'C:\LLM_KNOWLEDGE\Legislate\nh-civic-app\apps\save-act\app'
+[00:05:23.186] Server  ERROR   Error: ENOENT: no such file or directory, scandir 'C:\LLM_KNOWLEDGE\Legislate\nh-civic-app\apps\save-act\app'
+[00:05:23.188] Server  ERROR   Error: ENOENT: no such file or directory, scandir 'C:\LLM_KNOWLEDGE\Legislate\nh-civic-app\apps\save-act\app'
+[00:05:23.191] Server  ERROR   Error: ENOENT: no such file or directory, scandir 'C:\LLM_KNOWLEDGE\Legislate\nh-civic-app\apps\save-act\app'
+[00:05:23.196] Server  ERROR   Error: ENOENT: no such file or directory, scandir 'C:\LLM_KNOWLEDGE\Legislate\nh-civic-app\apps\save-act\app'
+[00:05:23.197] Server  ERROR   Error: ENOENT: no such file or directory, scandir 'C:\LLM_KNOWLEDGE\Legislate\nh-civic-app\apps\save-act\app'
+[00:05:23.199] Server  ERROR   Error: ENOENT: no such file or directory, scandir 'C:\LLM_KNOWLEDGE\Legislate\nh-civic-app\apps\save-act\app'
+[00:05:23.200] Server  ERROR   Error: ENOENT: no such file or directory, scandir 'C:\LLM_KNOWLEDGE\Legislate\nh-civic-app\apps\save-act\app'
