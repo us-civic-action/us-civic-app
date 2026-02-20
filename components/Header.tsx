@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -13,6 +14,7 @@ export default function Header() {
     const routeState = typeof params?.state === 'string' ? params.state : null;
     const titlePrefix = routeState ? routeState.toUpperCase() : "US";
     const basePath = routeState ? `/${routeState.toLowerCase()}` : '';
+    const [isToolsOpen, setIsToolsOpen] = useState(false);
 
     return (
         <header className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 sticky top-0 z-[100] transition-colors pt-[env(safe-area-inset-top)]">
@@ -54,10 +56,13 @@ export default function Header() {
                     </Link>
 
                     <div className="relative group/menu py-4">
-                        <button className="text-sm font-bold text-granite-900 dark:text-slate-200 hover:text-black dark:hover:text-white transition-colors flex items-center gap-1">
-                            Tools & Resources <ChevronDown className="w-4 h-4" />
+                        <button
+                            onClick={() => setIsToolsOpen(!isToolsOpen)}
+                            className="text-sm font-bold text-granite-900 dark:text-slate-200 hover:text-black dark:hover:text-white transition-colors flex items-center gap-1"
+                        >
+                            Tools & Resources <ChevronDown className={`w-4 h-4 transition-transform ${isToolsOpen ? 'rotate-180' : ''}`} />
                         </button>
-                        <div className="absolute top-full right-0 w-56 pt-2 opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all duration-200 z-50 transform translate-y-2 group-hover/menu:translate-y-0">
+                        <div className={`absolute top-full right-0 w-56 pt-2 transition-all duration-200 z-50 transform ${isToolsOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2 group-hover/menu:opacity-100 group-hover/menu:visible group-hover/menu:translate-y-0'}`}>
                             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden p-1">
                                 {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
                                 <a
